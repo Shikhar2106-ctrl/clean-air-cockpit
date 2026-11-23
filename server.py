@@ -137,7 +137,7 @@ def render_dashboard_html(test_case=None):
 
     cards_replacement = f'window.cards = {json.dumps(current_cards)};'
     html = re.sub(
-        r"{%\s*if\s+device_settings\s+and\s+device_settings\.cards\s*%}[\s\S]*?{%\s*endif\s*%}",
+        r"{%\s*if\s+device_settings\s+and\s+device_settings\.cards\s*%}[\s\S]*?{%\s*else\s*%}[\s\S]*?{%\s*endif\s*%}",
         cards_replacement,
         html
     )
@@ -157,6 +157,8 @@ def render_dashboard_html(test_case=None):
 
     html = html.replace('{{ sensor_json|default:""|safe }}', json.dumps(current_sensor))
     html = html.replace('{{ cards_json|default:""|safe }}', json.dumps(current_cards))
+    html = html.replace('{{ sensor_data|json_script:"cockpit-data" }}', f'<script id="cockpit-data" type="application/json">{json.dumps(current_sensor)}</script>')
+    html = html.replace('{{ cards_list|json_script:"cockpit-cards" }}', f'<script id="cockpit-cards" type="application/json">{json.dumps(current_cards)}</script>')
     html = html.replace('{{device.device_id}}', current_sensor.get("device_id", "KNMA-01"))
     html = html.replace("{{ device.station.lat|default:'' }}", "28.6139")
     html = html.replace("{{ device.station.lon|default:'' }}", "77.2090")
