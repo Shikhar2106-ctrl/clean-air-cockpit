@@ -1,0 +1,3 @@
+# IntelliGreen Clean Air Cockpit
+# The server is built on Python's standard library (http.server, socketserver, urllib).
+# Zero external pip packages required for deployment!

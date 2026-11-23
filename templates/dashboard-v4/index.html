@@ -1,0 +1,562 @@
+{% extends 'dashboard-v4/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Panel 1: Indoor AQI (Double Width with Dynamic Skyline / Mountains Background) -->
+<article class="corporate-panel corporate-indoor" id="indoorCard" aria-labelledby="indoor-title"
+  title="Dynamic Mountain Landscapes (auto-cycles every 20s, or click to cycle)">
+  <div class="corporate-indoor-bg" id="indoorCardBg" aria-hidden="true"></div>
+  <div class="corporate-indoor-copy">
+    <h2 id="indoor-title">Indoor AQI</h2>
+    <strong class="corporate-main-value num" id="indoorAqiValue">--</strong>
+    <p class="corporate-condition">
+      <span id="indoorCondition">Good</span>
+      <span id="currentZoneName">KNMA</span>
+    </p>
+    <div class="indoor-metric-wrapper">
+      <div class="indoor-last-updated" id="indoorLastUpdated" title="Last data update received from server">
+        <svg class="indoor-update-clock" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Updated <time id="indoorLastUpdatedTime">Just now</time></span>
+      </div>
+      <!-- Air quality index badge commented out for now
+      <div class="corporate-metric">
+        <div class="corporate-metric-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <div>
+          <span id="indoorMetricLabel">Air quality index</span>
+          <strong id="indoorAqiSub">--</strong>
+        </div>
+      </div>
+      -->
+    </div>
+  </div>
+</article>
+
+<!-- Panel 2: Outdoor AQI (With Semicircular SVG Needle Gauge) -->
+<article class="corporate-panel corporate-outdoor" aria-labelledby="outdoor-title">
+  <h2 id="outdoor-title">Outdoor AQI</h2>
+  <div class="corporate-outdoor-reading">
+    <strong class="corporate-main-value num" id="outdoorAqiValue">--</strong>
+    <svg viewBox="0 0 140 88" class="corporate-gauge" role="img" aria-label="Outdoor AQI gauge">
+      <path d="M 12 73 A 58 58 0 0 1 128 73" class="corporate-gauge-track"></path>
+      <path d="M 12 73 A 58 58 0 0 1 128 73" pathLength="500" id="gaugeArc" stroke-dasharray="0 500"
+        class="corporate-gauge-fill"></path>
+      <line x1="70" y1="73" x2="24" y2="73" id="gaugeNeedle" class="corporate-gauge-needle"></line>
+      <circle cx="70" cy="73" r="5"></circle>
+    </svg>
+  </div>
+  <div class="corporate-outdoor-info" id="outdoorDesc">
+    <p class="corporate-condition corporate-outdoor-condition">
+      <span id="outdoorCondition">Satisfactory</span>
+      <span class="outdoor-condition-sub">outdoor air quality</span>
+    </p>
+    <p class="corporate-outdoor-meta">
+      <span class="corporate-source" id="outdoorStation">Delhi Central reference · 1-h avg</span>
+    </p>
+  </div>
+  <div class="corporate-weather corporate-reduction-pill" id="outdoorReductionBox" style="display: none;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      stroke-linejoin="round" aria-hidden="true" class="reduction-badge-icon">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      <path d="m9 12 2 2 4-4"></path>
+    </svg>
+    <div class="reduction-content">
+      <span class="reduction-label">AQI Reduction: <strong id="outdoorAqiReductionVal"
+          class="reduction-val">--%</strong></span>
+    </div>
+  </div>
+</article>
+
+<!-- Panel 3: PM2.5 & Air Elements (6 Dynamic Bars) -->
+<article class="corporate-panel corporate-elements" aria-labelledby="elements-title">
+  <h2 id="elements-title">PM2.5 & air elements</h2>
+  <p class="corporate-pm-value">
+    <strong class="num" id="pm25Display">-- µg/m³</strong> · <span id="pm25CatLabel">Good</span>
+  </p>
+  <div class="corporate-bars" id="corporateBars">
+    <!-- PM2.5 -->
+    <div class="corporate-bar-item" title="PM2.5 concentration">
+      <div class="corporate-bar-track"><span id="bar-pm25" style="height: 25%;"></span></div>
+      <span class="bar-param-label">PM2.5</span>
+      <strong class="bar-param-val" id="val-pm25">--</strong>
+    </div>
+    <!-- PM10 -->
+    <div class="corporate-bar-item" title="PM10 concentration">
+      <div class="corporate-bar-track"><span id="bar-pm10" style="height: 35%;"></span></div>
+      <span class="bar-param-label">PM10</span>
+      <strong class="bar-param-val" id="val-pm10">--</strong>
+    </div>
+    <!-- CO2 -->
+    <div class="corporate-bar-item" title="CO2 level">
+      <div class="corporate-bar-track"><span id="bar-co2" style="height: 45%;"></span></div>
+      <span class="bar-param-label">CO₂</span>
+      <strong class="bar-param-val" id="val-co2">--</strong>
+    </div>
+    <!-- Temp -->
+    <div class="corporate-bar-item" title="Indoor Temperature">
+      <div class="corporate-bar-track"><span id="bar-temp" style="height: 60%;"></span></div>
+      <span class="bar-param-label">Temp</span>
+      <strong class="bar-param-val" id="val-temp">--</strong>
+    </div>
+    <!-- RH -->
+    <div class="corporate-bar-item" title="Relative Humidity">
+      <div class="corporate-bar-track"><span id="bar-rh" style="height: 48%;"></span></div>
+      <span class="bar-param-label">RH</span>
+      <strong class="bar-param-val" id="val-rh">--</strong>
+    </div>
+    <!-- TVOC -->
+    <div class="corporate-bar-item" title="TVOC (Total Volatile Organic Compounds: 0–1000 ppm)">
+      <div class="corporate-bar-track"><span id="bar-tvoc" style="height: 24%;"></span></div>
+      <span class="bar-param-label">TVOC</span>
+      <strong class="bar-param-val" id="val-tvoc">--</strong>
+    </div>
+  </div>
+</article>
+
+<!-- Panel 4: Active Monitors & Monitored Devices -->
+<article class="corporate-panel corporate-locations" aria-labelledby="locations-title" id="locationsPanel">
+  <div class="corporate-locations-header">
+    <h2 id="locations-title">Active Monitors</h2>
+
+    <div class="corporate-header-actions">
+      <!-- Animated Expandable Search Box (Top-Right) -->
+      <div class="corporate-search-box" id="deviceSearchBox">
+        <button type="button" class="btn-search-trigger" id="deviceSearchTrigger" aria-label="Search devices"
+          title="Search devices">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+        <div class="search-input-wrapper" id="searchInputWrapper">
+          <input type="text" id="deviceSearchInput" class="device-search-input" placeholder="Search devices..."
+            autocomplete="off" spellcheck="false" aria-label="Search devices">
+          <button type="button" id="deviceSearchClear" class="btn-search-close" aria-label="Close search"
+            title="Close search">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Monitored Devices List (Scrollable list rendered dynamically from device_list) -->
+  <div class="corporate-location-list" id="locationList" role="listbox" aria-label="Monitored devices"></div>
+
+  <!-- Single Location Leaf Mascot & Glass Globe View (Fallback) -->
+  <div class="tile-mascot-view" id="tileMascotView" style="display: none;" title="Click to alternate characters">
+    <div class="mascot-breeze-particles" aria-hidden="true">
+      <span class="mascot-leaf leaf-1">🍃</span>
+      <span class="mascot-leaf leaf-2">✨</span>
+      <span class="mascot-leaf leaf-3">🍃</span>
+    </div>
+    <div class="mascot-scene" id="mascotScene">
+      <img src="{% static 'dashboard-v4/assets/leaf_mascot.png' %}" alt="IntelliGreen Pure Air Sprout"
+        class="mascot-character leaf-mascot-img is-active" id="leafMascotImg">
+      <img src="{% static 'dashboard-v4/assets/eco_bulb_clean.png' %}" alt="Eco Sustainability Bulb"
+        class="mascot-character eco-bulb-img" id="ecoBulbImg">
+    </div>
+    <div class="mascot-sill"></div>
+  </div>
+</article>
+
+<!-- Panel 5: Current Time & Wind Tile (Redesigned) -->
+<article class="corporate-panel corporate-weather-wind corporate-time-wind" id="weatherWindPanel"
+  aria-labelledby="time-wind-title">
+  <!-- Background Flowing Wind Waves (Animated in Very Slow Motion) -->
+  <div class="time-wind-bg-waves" aria-hidden="true">
+    <div class="wave-track wave-track-1">
+      <svg viewBox="0 0 1000 120" preserveAspectRatio="none" class="wind-wave-svg">
+        <defs>
+          <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(45, 212, 191, 0.08)" />
+            <stop offset="25%" stop-color="rgba(45, 212, 191, 0.4)" />
+            <stop offset="50%" stop-color="rgba(56, 189, 248, 0.3)" />
+            <stop offset="75%" stop-color="rgba(45, 212, 191, 0.4)" />
+            <stop offset="100%" stop-color="rgba(45, 212, 191, 0.08)" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M0,60 C125,20 250,100 375,60 C437.5,40 468.75,70 500,60 C625,20 750,100 875,60 C937.5,40 968.75,70 1000,60"
+          fill="none" stroke="url(#waveGrad1)" stroke-width="2.2" />
+      </svg>
+    </div>
+    <div class="wave-track wave-track-2">
+      <svg viewBox="0 0 1000 120" preserveAspectRatio="none" class="wind-wave-svg">
+        <defs>
+          <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(20, 184, 166, 0.1)" />
+            <stop offset="30%" stop-color="rgba(52, 211, 153, 0.38)" />
+            <stop offset="70%" stop-color="rgba(45, 212, 191, 0.28)" />
+            <stop offset="100%" stop-color="rgba(20, 184, 166, 0.1)" />
+          </linearGradient>
+        </defs>
+        <path d="M0,80 C150,110 250,40 375,75 C450,95 475,70 500,80 C650,110 750,40 875,75 C950,95 975,70 1000,80"
+          fill="none" stroke="url(#waveGrad2)" stroke-width="1.8" />
+      </svg>
+    </div>
+    <div class="wave-track wave-track-3">
+      <svg viewBox="0 0 1000 120" preserveAspectRatio="none" class="wind-wave-svg">
+        <defs>
+          <linearGradient id="waveGrad3" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(255, 255, 255, 0.2)" />
+            <stop offset="50%" stop-color="rgba(255, 255, 255, 0.75)" />
+            <stop offset="100%" stop-color="rgba(255, 255, 255, 0.2)" />
+          </linearGradient>
+        </defs>
+        <path d="M0,70 C100,90 200,45 350,65 C425,75 460,55 500,70 C600,90 700,45 850,65 C925,75 960,55 1000,70"
+          fill="none" stroke="url(#waveGrad3)" stroke-width="1.3" />
+      </svg>
+    </div>
+    <div class="wave-track wave-track-4">
+      <svg viewBox="0 0 1000 120" preserveAspectRatio="none" class="wind-wave-svg">
+        <defs>
+          <linearGradient id="waveGrad4" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="rgba(14, 165, 233, 0.05)" />
+            <stop offset="50%" stop-color="rgba(14, 165, 233, 0.32)" />
+            <stop offset="100%" stop-color="rgba(14, 165, 233, 0.05)" />
+          </linearGradient>
+        </defs>
+        <path d="M0,95 C130,70 270,115 380,90 C440,75 480,105 500,95 C630,70 770,115 880,90 C940,75 980,105 1000,95"
+          fill="none" stroke="url(#waveGrad4)" stroke-width="1.5" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Header: Title & Weather Icon -->
+  <header class="time-wind-header">
+    <h2 id="time-wind-title" class="time-wind-title">Outdoor Weather Conditions</h2>
+    <div class="time-wind-badge-icon" aria-hidden="true" title="Outdoor Weather Conditions">
+      <svg viewBox="0 0 24 24" class="eco-clock-svg" width="22" height="22" fill="none" stroke="currentColor"
+        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2v2"></path>
+        <path d="m4.93 4.93 1.41 1.41"></path>
+        <path d="M20 12h2"></path>
+        <path d="m19.07 4.93-1.41 1.41"></path>
+        <path d="M15.947 12.65a4 4 0 0 0-5.925-4.128"></path>
+        <path d="M13 22H7a5 5 0 1 1 4.9-6H13a3 3 0 0 1 0 6Z"></path>
+      </svg>
+    </div>
+  </header>
+
+  <!-- Main Body: Two Columns with Center Divider -->
+  <div class="time-wind-body">
+    <!-- Left Column: Outdoor Temperature (Location name removed) -->
+    <div class="time-wind-col time-wind-weather-col">
+      <span id="outdoorWeatherCity" style="display: none;"></span>
+      <!-- Temperature (Bold 29 + °C) -->
+      <div class="outdoor-weather-temp-wrap" id="outdoorWeatherTemp">
+        <span class="outdoor-weather-val" id="outdoorWeatherVal">29</span>
+        <span class="outdoor-weather-unit" id="outdoorWeatherUnit">&deg;C</span>
+      </div>
+
+      <!-- Condition Title -->
+      <div class="outdoor-weather-condition" id="outdoorWeatherCondition">Partly Cloudy</div>
+
+      <!-- High/Low Range Pill -->
+      <div class="outdoor-weather-range-pill" id="outdoorWeatherRangePill">
+        <span class="range-item">H: <strong class="range-val" id="weatherHighTemp">29&deg;</strong></span>
+        <span class="range-dot" aria-hidden="true">&bull;</span>
+        <span class="range-item">L: <strong class="range-val" id="weatherLowTemp">18&deg;</strong></span>
+      </div>
+    </div>
+
+    <!-- Vertical Divider -->
+    <div class="time-wind-divider" aria-hidden="true"></div>
+
+    <!-- Right Column: Clean Wind Speed Meter (No compass, no gusts) -->
+    <div class="time-wind-col time-wind-speed-col">
+      <div class="wind-speed-dial-container" title="Current Wind Velocity">
+        <div class="wind-speed-dial">
+          <!-- Circular Ambient Track -->
+          <div class="wind-speed-ring" aria-hidden="true"></div>
+
+          <!-- Center Content: Wind Icon, Numerical Speed & Unit -->
+          <div class="wind-speed-center-content">
+            <div class="wind-speed-icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="wind-breeze-icon">
+                <path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"></path>
+                <path d="M9.6 4.6A2 2 0 1 1 11 8H2"></path>
+                <path d="M12.6 19.4A2 2 0 1 0 14 16H2"></path>
+              </svg>
+            </div>
+            <div class="wind-speed-reading">
+              <strong class="speed-num" id="windSpeedVal">18</strong>
+              <span class="speed-unit">km/h</span>
+            </div>
+            <span class="wind-speed-caption">Wind Speed</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+{% endblock %}
+
+{% block script %}
+<script>
+  /**
+   * Clean Air Cockpit - Customer Tube Selection & Sensor Data Ingestion
+   */
+  window.cards = window.cards || [];
+  {% if device_settings and device_settings.cards %}
+  {% if 'pm2d5' in device_settings.cards %} window.cards.push('pm2d5'); {% endif %}
+  {% if 'pm10' in device_settings.cards %} window.cards.push('pm10'); {% endif %}
+  {% if 'tvoc' in device_settings.cards %} window.cards.push('tvoc'); {% endif %}
+  {% if 'rh' in device_settings.cards %} window.cards.push('rh'); {% endif %}
+  {% if 'temp' in device_settings.cards %} window.cards.push('temp'); {% endif %}
+  {% if 'co2' in device_settings.cards %} window.cards.push('co2'); {% endif %}
+  {% if 'hcho' in device_settings.cards %} window.cards.push('hcho'); {% endif %}
+  {% if 'Virus Index' in device_settings.cards %} window.cards.push('virus_index'); {% endif %}
+  {% if 'Air Pressure' in device_settings.cards %} window.cards.push('air_pressure'); {% endif %}
+  {% if 'Ozone' in device_settings.cards %} window.cards.push('ozone'); {% endif %}
+  {% if 'NO2' in device_settings.cards %} window.cards.push('no2'); {% endif %}
+  {% if 'CO' in device_settings.cards %} window.cards.push('co'); {% endif %}
+  {% else %}
+  window.cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"];
+  {% endif %}
+
+  /**
+   * Indoor AQI Enablement Setting (Controlled from Django Admin Side)
+   * If indoor_aqi is set to False in device_settings / admin, the cockpit dynamically
+   * displays "Indoor PM2.5" with its value, condition, and color in Panel 1 instead.
+   */
+  window.indoor_aqi_enabled = {% if device_settings and device_settings.indoor_aqi == False or device_settings.show_aqi == False or device_settings.show_indoor_aqi == False or device_settings.aqi_enabled == False %}false{% else %}true{% endif %};
+
+  var device_list = [];
+
+  {% for iot_device in iot_devices %}
+  {% if iot_device.device_type == 'Air Quality Monitor' %}
+  device_list.push({
+    "device_id": "{{iot_device.device_id}}",
+    "device_name": "{{iot_device.device_name}}",
+    "offline": {{ iot_device.offline | yesno: "true,false"| default: "false" }},
+    });
+  {% endif %}
+  {% endfor %}
+
+  window.device_list = device_list;
+  window.device_lat = "{{ device.station.lat|default:'' }}";
+  window.device_lon = "{{ device.station.lon|default:'' }}";
+  if (typeof window.setDeviceList === "function") {
+    window.setDeviceList(device_list);
+  }
+
+  var activeRes = (typeof res !== 'undefined' ? res : (window.res || null));
+  window["device_id"] = (activeRes && activeRes.device_id) || (device_list[0] && device_list[0].device_id) || '{{device.device_id}}';
+
+  // Ingest the real payload immediately
+  if (activeRes) {
+    if (typeof window.ingestSensorPayload === "function") {
+      window.ingestSensorPayload(activeRes);
+    } else if (typeof ingestSensorPayload === "function") {
+      ingestSensorPayload(activeRes);
+    }
+  }
+
+  /**
+   * Automatic Server-Side Ingestion from Django context (if present)
+   */
+  (function initCockpitData() {
+    let serverPayload = null;
+    const dataEl = document.getElementById("cockpit-data");
+    if (dataEl && dataEl.textContent.trim().length > 0) {
+      const text = dataEl.textContent.trim();
+      if (!text.startsWith("<!--") && !text.includes("{{")) {
+        try {
+          serverPayload = JSON.parse(text);
+        } catch (e) {
+          console.warn("Could not parse Django #cockpit-data:", e);
+        }
+      }
+    }
+
+    const activeData = serverPayload;
+    if (activeData) {
+      if (typeof window.ingestSensorPayload === "function") {
+        window.ingestSensorPayload(activeData);
+      } else if (typeof ingestSensorPayload === "function") {
+        ingestSensorPayload(activeData);
+      }
+    }
+  })();
+
+  function renderUI(data) {
+    if (typeof window.ingestSensorPayload === "function") {
+      window.ingestSensorPayload(data);
+    } else if (typeof ingestSensorPayload === "function") {
+      ingestSensorPayload(data);
+    }
+  }
+
+  /**
+   * Continuous 25-Second Page Synchronization Engine
+   * Automatically updates the dashboard sensor metrics, AQI readings, tubes,
+   * and weather data in real-time without requiring a manual page refresh.
+   */
+  const SYNC_INTERVAL_MS = 25000; // 25 seconds
+  let syncTimer = null;
+  let isSyncInProgress = false;
+  let currentAbortController = null;
+
+  function applySyncedData(data) {
+    if (!data) return;
+    // Prevent auto-sync race condition: Do not overwrite when active test scenario is running
+    if (window.isCockpitTestMode) {
+      console.log('[Auto-Sync] Test Mode is active: Skipped overwriting active test scenario');
+      return;
+    }
+    if (typeof window.ingestSensorPayload === "function") {
+      window.ingestSensorPayload(data);
+    } else if (typeof ingestSensorPayload === "function") {
+      ingestSensorPayload(data);
+    }
+    if (window.WeatherService && typeof window.WeatherService.updateFromSensor === "function") {
+      window.WeatherService.updateFromSensor(data);
+    }
+  }
+
+  function fallbackAjaxFetch(endpoint, targetId, callback) {
+    if (typeof $ !== 'undefined' && $.ajax) {
+      $.ajax({
+        type: 'GET',
+        url: endpoint,
+        cache: false,
+        timeout: 10000,
+        success: function (data) {
+          const activeNow = String(window.device_id || window.currentDeviceId || '');
+          if (!targetId || !activeNow || String(targetId) === activeNow) {
+            applySyncedData(data);
+          }
+        },
+        error: function (err) {
+          console.warn('[Auto-Sync] AJAX endpoint fallback notice:', err.statusText || err);
+        },
+        complete: function () {
+          if (typeof callback === 'function') callback();
+        }
+      });
+    } else {
+      if (typeof callback === 'function') callback();
+    }
+  }
+
+  function scheduleNextSync(ms) {
+    const delay = (typeof ms === 'number' && ms > 0) ? ms : SYNC_INTERVAL_MS;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () {
+      getRealTimeData();
+    }, delay);
+  }
+
+  function getRealTimeData(force) {
+    // If active test scenario or sliders are being tested, skip auto-sync fetch so no race conditions occur
+    if (window.isCockpitTestMode && !force) {
+      scheduleNextSync(SYNC_INTERVAL_MS);
+      return;
+    }
+
+    const activeId = window.device_id || window.currentDeviceId;
+    if (!activeId || String(activeId).includes("{{")) return;
+
+    // When force is true (e.g. monitor clicked/switched), abort any in-flight request and fetch immediately
+    if (force && currentAbortController) {
+      try {
+        currentAbortController.abort();
+      } catch (e) { }
+      isSyncInProgress = false;
+    } else if (isSyncInProgress) {
+      return;
+    }
+    isSyncInProgress = true;
+
+    // Clear any pending sync timer so we don't double-poll
+    clearTimeout(syncTimer);
+
+    const targetId = String(activeId);
+    const endpoint = '/get-real-time-data/' + encodeURIComponent(targetId) + '/';
+
+    // 1. Primary: Native fetch with AbortController timeout (no dependencies required)
+    if (window.fetch) {
+      currentAbortController = new AbortController();
+      const controller = currentAbortController;
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      fetch(endpoint, {
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+        signal: controller.signal
+      })
+        .then(function (res) {
+          clearTimeout(timeout);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function (data) {
+          // Check that user hasn't switched to another device in the meantime
+          const activeNow = String(window.device_id || window.currentDeviceId || '');
+          if (data && (!activeNow || !targetId || targetId === activeNow)) {
+            applySyncedData(data);
+          }
+        })
+        .catch(function (err) {
+          if (err && err.name === 'AbortError') {
+            // Fetch aborted because user switched device or timed out - do not fallback
+            return;
+          }
+          // If fetch fails, attempt jQuery ajax fallback
+          fallbackAjaxFetch(endpoint, targetId);
+        })
+        .finally(function () {
+          if (currentAbortController === controller) {
+            isSyncInProgress = false;
+            currentAbortController = null;
+          }
+          scheduleNextSync(SYNC_INTERVAL_MS);
+        });
+    } else {
+      // 2. Secondary: Fallback for older browsers
+      fallbackAjaxFetch(endpoint, targetId, function () {
+        isSyncInProgress = false;
+        scheduleNextSync(SYNC_INTERVAL_MS);
+      });
+    }
+  }
+
+  // Expose global methods for diagnostics & manual controls
+  window.getRealTimeData = getRealTimeData;
+  window.startDataSynchronization = function (ms) {
+    scheduleNextSync(ms || SYNC_INTERVAL_MS);
+  };
+  window.stopDataSynchronization = function () {
+    clearTimeout(syncTimer);
+  };
+
+  // Auto-launch continuous 25-second synchronization loop on DOM Ready
+  function initDataSync() {
+    getRealTimeData();
+    scheduleNextSync(SYNC_INTERVAL_MS);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initDataSync);
+  } else {
+    initDataSync();
+  }
+</script>
+{% endblock %}

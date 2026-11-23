@@ -1,0 +1,27 @@
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+*.pyvenv
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Temporary & Local Scratch Artifacts
+scratch/
+.gemini/
+
+# OS-specific metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs & Environment Overrides
+*.log
+.env
+.env.local
