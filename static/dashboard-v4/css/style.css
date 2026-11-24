@@ -620,10 +620,6 @@ body.mode-landscape-tv .corporate-grid {
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.corporate-reduction-pill .reduction-pill-icon {
-  margin-right: 0.65rem;
-}
-
 .corporate-reduction-pill.is-hidden {
   display: none !important;
 }
@@ -775,10 +771,6 @@ body.mode-landscape-tv .corporate-grid {
 .corporate-header-actions {
   display: flex;
   align-items: center;
-}
-
-.corporate-device-search {
-  margin-right: 0.5rem;
 }
 
 .btn-search-trigger {
@@ -1991,11 +1983,8 @@ body[data-theme="dark"] {
 }
 
 /* Header in Dark Mode */
-[data-theme="dark"] .btn-nav-toggle,
 [data-theme="dark"] .btn-menu-toggle,
-[data-theme="dark"] .theme-toggle-btn,
-[data-theme="dark"] .btn-theme-toggle,
-[data-theme="dark"] .cockpit-time-pill {
+[data-theme="dark"] .btn-theme-toggle {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;

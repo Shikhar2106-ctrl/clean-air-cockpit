@@ -324,37 +324,27 @@
     return fallback;
   }
 
-  /** Reduction Percentage Calculation */
-  function reductionPct(outdoor, indoor) {
-    const outVal = parseFloat(outdoor);
-    const inVal = parseFloat(indoor);
-    if (isNaN(outVal) || isNaN(inVal) || outVal <= 0) return 0;
-    return Math.max(0, Math.min(100, Math.round(((outVal - inVal) / outVal) * 100)));
-  }
+  /** Reduction Percentage Calculation (Delegated to CockpitAPI with safe fallback) */
+  const reductionPct = (typeof window !== "undefined" && window.CockpitAPI && window.CockpitAPI.reductionPct)
+    || function (outdoor, indoor) {
+      const outVal = parseFloat(outdoor);
+      const inVal = parseFloat(indoor);
+      if (isNaN(outVal) || isNaN(inVal) || outVal <= 0 || inVal >= outVal) return 0;
+      return Math.max(0, Math.min(100, Math.round(((outVal - inVal) / outVal) * 100)));
+    };
 
-  /**
-   * Predicts Outdoor PM2.5 from Outdoor AQI using the inverse CPCB NAQI formula.
-   */
-  function predictPm25FromAqi(aqi) {
-    const val = parseFloat(aqi);
-    if (isNaN(val) || val <= 0) return 0;
-
-    let pm25;
-    if (val <= 50) {
-      pm25 = (val / 50) * 30;
-    } else if (val <= 100) {
-      pm25 = 30 + ((val - 50) / 50) * 30;
-    } else if (val <= 200) {
-      pm25 = 60 + ((val - 100) / 100) * 30;
-    } else if (val <= 300) {
-      pm25 = 90 + ((val - 200) / 100) * 30;
-    } else if (val <= 400) {
-      pm25 = 120 + ((val - 300) / 100) * 130;
-    } else {
-      pm25 = 250 + ((val - 400) / 100) * 130;
-    }
-    return Math.round(pm25 * 10) / 10;
-  }
+  /** Predicts Outdoor PM2.5 from Outdoor AQI (Delegated to CockpitAPI with safe fallback) */
+  const predictPm25FromAqi = (typeof window !== "undefined" && window.CockpitAPI && window.CockpitAPI.predictPm25FromAqi)
+    || function (aqi) {
+      const val = parseFloat(aqi);
+      if (isNaN(val) || val <= 0) return 0;
+      if (val <= 50) return Math.round((val / 50) * 30 * 10) / 10;
+      if (val <= 100) return Math.round((30 + ((val - 50) / 50) * 30) * 10) / 10;
+      if (val <= 200) return Math.round((60 + ((val - 100) / 100) * 30) * 10) / 10;
+      if (val <= 300) return Math.round((90 + ((val - 200) / 100) * 30) * 10) / 10;
+      if (val <= 400) return Math.round((120 + ((val - 300) / 100) * 130) * 10) / 10;
+      return Math.round((250 + ((val - 400) / 100) * 130) * 10) / 10;
+    };
 
   // --- Dynamic Tube Parameter Registry (All 15 Customizable Tubes) ---
   const PARAMETER_REGISTRY = {
@@ -498,6 +488,9 @@
   }
 
   function resolveParamKey(raw) {
+    if (typeof window !== "undefined" && window.CockpitAPI && typeof window.CockpitAPI.resolveParamKey === "function") {
+      return window.CockpitAPI.resolveParamKey(raw);
+    }
     if (!raw) return null;
     const clean = String(raw).toLowerCase().replace(/[\s\.\-_]/g, "");
     const aliasMap = {
@@ -535,11 +528,8 @@
 
   // --- DOM Elements ---
   const liveClockEl = document.getElementById("liveClock");
-  const statusDot = document.getElementById("statusDot");
-  const monitoringStatus = document.getElementById("monitoringStatus");
   const locationsPanel = document.getElementById("locationsPanel");
   const locationListEl = document.getElementById("locationList");
-  const locationTotalCount = document.getElementById("locationTotalCount");
   const deviceSearchBox = document.getElementById("deviceSearchBox");
   const deviceSearchTrigger = document.getElementById("deviceSearchTrigger");
   const deviceSearchInput = document.getElementById("deviceSearchInput");
@@ -553,15 +543,11 @@
   const indoorAqiValueEl = document.getElementById("indoorAqiValue");
   const indoorConditionEl = document.getElementById("indoorCondition");
   const currentZoneNameEl = document.getElementById("currentZoneName");
-  const indoorMetricLabelEl = document.getElementById("indoorMetricLabel");
-  const indoorAqiSubEl = document.getElementById("indoorAqiSub");
   const indoorLastUpdatedTimeEl = document.getElementById("indoorLastUpdatedTime");
 
   // Panel 2: Outdoor AQI
   const outdoorAqiValueEl = document.getElementById("outdoorAqiValue");
   const outdoorConditionEl = document.getElementById("outdoorCondition");
-  const outdoorPm25El = document.getElementById("outdoorPm25");
-  const outdoorPm10El = document.getElementById("outdoorPm10");
   const gaugeArc = document.getElementById("gaugeArc");
   const gaugeNeedle = document.getElementById("gaugeNeedle");
   const outdoorStationEl = document.getElementById("outdoorStation") || document.querySelector(".corporate-source");
@@ -571,12 +557,8 @@
   const pm25DisplayEl = document.getElementById("pm25Display");
   const pm25CatLabelEl = document.getElementById("pm25CatLabel");
 
-  // Panel 5: Impact & Reduction / Panel 2 AQI Reduction
-  const aqiReductionEl = document.getElementById("aqiReduction") || document.getElementById("outdoorAqiReductionVal");
-  const pmReductionEl = document.getElementById("pmReduction");
-  const ringAqiArc = document.getElementById("ringAqiArc");
-  const ringPmArc = document.getElementById("ringPmArc");
-  const RING_CIRCUMFERENCE = 251.33;
+  // Panel 2 AQI Reduction Pill
+  const aqiReductionEl = document.getElementById("outdoorAqiReductionVal");
 
   // Theme Toggle Elements
   const themeToggleBtn = document.getElementById("themeToggleBtn");
@@ -712,10 +694,6 @@
       clearInterval(landscapeAutoTimer);
       landscapeAutoTimer = null;
     }
-  }
-
-  function restartLandscapeAutoLoop(intervalMs = 20000) {
-    startLandscapeAutoLoop(intervalMs);
   }
 
   // Expose Landscape Controller globally for verification & testing
@@ -1012,15 +990,6 @@
     const totalCount = allDevices.length;
     const filteredCount = filteredDevices.length;
 
-    // Optional Total Count Badge (if element exists)
-    if (locationTotalCount) {
-      if (searchKeyword.trim().length > 0) {
-        locationTotalCount.textContent = `${filteredCount} of ${totalCount}`;
-      } else {
-        locationTotalCount.textContent = `${totalCount.toLocaleString()} device${totalCount === 1 ? "" : "s"}`;
-      }
-    }
-
     // Empty Search State
     if (filteredCount === 0) {
       const emptyEl = document.createElement("div");
@@ -1126,13 +1095,6 @@
 
     // If device is flagged offline, reflect immediately
     if (dev.offline) {
-      if (statusDot) {
-        statusDot.style.backgroundColor = "#64748b";
-        statusDot.style.boxShadow = "none";
-      }
-      if (monitoringStatus) {
-        monitoringStatus.textContent = "Offline";
-      }
       if (indoorConditionEl) {
         indoorConditionEl.textContent = "Offline";
         indoorConditionEl.style.color = "#94a3b8";
@@ -1438,8 +1400,6 @@
     if (isDeviceOffline) {
       if (indoorTitleEl) indoorTitleEl.textContent = isIndoorAqiDisabled ? "Indoor PM2.5" : "Indoor AQI";
       if (indoorAqiValueEl) indoorAqiValueEl.textContent = "0";
-      if (indoorMetricLabelEl) indoorMetricLabelEl.textContent = isIndoorAqiDisabled ? "Indoor PM2.5" : "Air quality index";
-      if (indoorAqiSubEl) indoorAqiSubEl.textContent = isIndoorAqiDisabled ? "0 µg/m³" : "0";
       if (indoorConditionEl) {
         indoorConditionEl.textContent = "Offline";
         indoorConditionEl.style.color = "#94a3b8";
@@ -1448,8 +1408,6 @@
       const formattedPm25 = hasIndoorPm25 ? (pm25Val % 1 === 0 ? pm25Val : pm25Val.toFixed(1)) : "--";
       if (indoorTitleEl) indoorTitleEl.textContent = "Indoor PM2.5";
       if (indoorAqiValueEl) indoorAqiValueEl.textContent = formattedPm25;
-      if (indoorMetricLabelEl) indoorMetricLabelEl.textContent = "Indoor PM2.5";
-      if (indoorAqiSubEl) indoorAqiSubEl.textContent = hasIndoorPm25 ? `${formattedPm25} µg/m³` : "--";
       if (indoorConditionEl) {
         indoorConditionEl.textContent = hasIndoorPm25 ? pm25Info.caption : "--";
         indoorConditionEl.style.color = hasIndoorPm25 ? pm25Info.color : "";
@@ -1457,8 +1415,6 @@
     } else if (effectiveHasIndoorAqi) {
       if (indoorTitleEl) indoorTitleEl.textContent = "Indoor AQI";
       if (indoorAqiValueEl) indoorAqiValueEl.textContent = Math.round(indoorAqiVal);
-      if (indoorMetricLabelEl) indoorMetricLabelEl.textContent = "Air quality index";
-      if (indoorAqiSubEl) indoorAqiSubEl.textContent = Math.round(indoorAqiVal);
       if (indoorConditionEl) {
         indoorConditionEl.textContent = indoorAqiInfo.caption;
         indoorConditionEl.style.color = indoorAqiInfo.color;
@@ -1466,8 +1422,6 @@
     } else {
       if (indoorTitleEl) indoorTitleEl.textContent = isIndoorAqiDisabled ? "Indoor PM2.5" : "Indoor AQI";
       if (indoorAqiValueEl) indoorAqiValueEl.textContent = "--";
-      if (indoorMetricLabelEl) indoorMetricLabelEl.textContent = isIndoorAqiDisabled ? "Indoor PM2.5" : "Air quality index";
-      if (indoorAqiSubEl) indoorAqiSubEl.textContent = "--";
       if (indoorConditionEl) {
         indoorConditionEl.textContent = "--";
         indoorConditionEl.style.color = "";
@@ -1479,20 +1433,6 @@
     if (outdoorConditionEl) {
       outdoorConditionEl.textContent = outdoorAqiInfo.caption;
       outdoorConditionEl.style.color = outdoorAqiInfo.color;
-    }
-    // Find the element by either ID (outdoorPm25 or outdoor_pm2_5)
-    const pm25TargetEl = document.getElementById("outdoorPm25")
-      || document.getElementById("outdoor_pm2_5")
-      || document.getElementById("outdoor_pm25");
-
-    if (pm25TargetEl && outdoorPm25Val > 0) {
-      pm25TargetEl.textContent = outdoorPm25Val % 1 === 0 ? outdoorPm25Val : outdoorPm25Val.toFixed(1);
-      if (isOutdoorPm25Predicted) {
-        pm25TargetEl.setAttribute("title", "Predicted from Outdoor AQI (CPCB formula)");
-      }
-    }
-    if (outdoorPm10El) {
-      outdoorPm10El.textContent = outdoorPm10Val % 1 === 0 ? outdoorPm10Val : outdoorPm10Val.toFixed(1);
     }
     if (outdoorStationEl) {
       if (payload.outdoor_station_name) {
@@ -1585,38 +1525,9 @@
     }
     renderDynamicTubes(getActiveCards(), payload);
 
-    // 7. Panel 5: Purification Impact & Reduction
+    // 7. Outdoor Card AQI Reduction Pill (Panel 2)
     const aqiRed = reductionPct(outdoorAqiVal, indoorAqiVal);
-    const pmRed = reductionPct(outdoorPm25Val, pm25Val);
-
     if (aqiReductionEl) aqiReductionEl.textContent = `${aqiRed}%`;
-    if (pmReductionEl) pmReductionEl.textContent = `${pmRed}%`;
-
-    const filtrationNoticeEl = document.getElementById("filtrationNotice");
-    if (filtrationNoticeEl) {
-      filtrationNoticeEl.textContent = isOutdoorPm25Predicted
-        ? "Effective filtration · est. from AQI"
-        : "Effective filtration · live";
-    }
-
-    if (ringAqiArc) {
-      const aqiOffset = RING_CIRCUMFERENCE * (1 - aqiRed / 100);
-      ringAqiArc.style.strokeDashoffset = aqiOffset.toFixed(2);
-    }
-    if (ringPmArc) {
-      const pmOffset = RING_CIRCUMFERENCE * (1 - pmRed / 100);
-      ringPmArc.style.strokeDashoffset = pmOffset.toFixed(2);
-    }
-
-    // 8. Header Device Status Indicator
-    const activeColor = hasIndoorAqi ? indoorAqiInfo.color : (hasIndoorPm25 ? pm25Info.color : "#64748b");
-    if (statusDot) {
-      statusDot.style.backgroundColor = isDeviceOffline ? "#64748b" : activeColor;
-      statusDot.style.boxShadow = isDeviceOffline ? "none" : `0 0 10px ${activeColor}`;
-    }
-    if (monitoringStatus) {
-      monitoringStatus.textContent = isDeviceOffline ? (offlineReason || "Offline") : "Live monitoring";
-    }
   }
 
   // --- Dark / Light Theme System ---
@@ -1748,64 +1659,27 @@
   }
 
   // --- Real-Time Polling & WebSocket Handlers ---
-  let realtimePollingTimer = null;
-  let activeWebSocket = null;
-
   function startRealtimePolling(url, intervalMs = 25000) {
-    if (!url) return;
-    stopRealtimePolling();
-
-    const fetchSensor = () => {
-      fetch(url)
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then((data) => {
-          ingestSensorPayload(data);
-        })
-        .catch((err) => {
-          console.warn("[Realtime] Fetch failed:", err.message);
-        });
-    };
-
-    fetchSensor();
-    realtimePollingTimer = setInterval(fetchSensor, Math.max(1000, intervalMs));
-    return realtimePollingTimer;
+    if (window.CockpitAPI && typeof window.CockpitAPI.startRealtimePolling === "function") {
+      return window.CockpitAPI.startRealtimePolling(url, intervalMs);
+    }
   }
 
   function stopRealtimePolling() {
-    if (realtimePollingTimer) {
-      clearInterval(realtimePollingTimer);
-      realtimePollingTimer = null;
+    if (window.CockpitAPI && typeof window.CockpitAPI.stopRealtimePolling === "function") {
+      return window.CockpitAPI.stopRealtimePolling();
     }
   }
 
   function connectWebSocket(wsUrl) {
-    if (!wsUrl) return;
-    if (activeWebSocket) {
-      try { activeWebSocket.close(); } catch (e) { }
+    if (window.CockpitAPI && typeof window.CockpitAPI.connectWebSocket === "function") {
+      return window.CockpitAPI.connectWebSocket(wsUrl);
     }
-    try {
-      activeWebSocket = new WebSocket(wsUrl);
-      activeWebSocket.onmessage = (event) => {
-        try {
-          const payload = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-          ingestSensorPayload(payload);
-        } catch (e) {
-          console.warn("[WebSocket] Parse error:", e);
-        }
-      };
-    } catch (e) {
-      console.error("[WebSocket] Connection error:", e);
-    }
-    return activeWebSocket;
   }
 
   function disconnectWebSocket() {
-    if (activeWebSocket) {
-      try { activeWebSocket.close(); } catch (e) { }
-      activeWebSocket = null;
+    if (window.CockpitAPI && typeof window.CockpitAPI.disconnectWebSocket === "function") {
+      return window.CockpitAPI.disconnectWebSocket();
     }
   }
 
@@ -1938,10 +1812,6 @@
       console.warn("Landscape init warning:", e);
     }
 
-    // Proactively clean up any inspector elements or classes
-    document.body.classList.remove("ui-inspector-mode");
-    document.querySelectorAll(".inspector-dimension-badge, .inspector-grid-bar, #ig-test-toolbar").forEach((el) => el.remove());
-
     // 5. Locations Panel Setup
     try {
       initLocationControls();
@@ -1978,13 +1848,6 @@
     setInterval(() => {
       const elapsed = Date.now() - lastSuccessfulDataReceivedTime;
       if (elapsed > OFFLINE_THRESHOLD_MS) {
-        if (statusDot) {
-          statusDot.style.backgroundColor = "#64748b";
-          statusDot.style.boxShadow = "none";
-        }
-        if (monitoringStatus) {
-          monitoringStatus.textContent = "Offline (No data > 15m)";
-        }
         if (indoorConditionEl) {
           indoorConditionEl.textContent = "Offline";
           indoorConditionEl.style.color = "#94a3b8";
