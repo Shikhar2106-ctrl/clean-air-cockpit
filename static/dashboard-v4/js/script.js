@@ -481,6 +481,9 @@
   const DEFAULT_CARDS = ["AQI", "pm2d5", "pm10", "co2", "temp", "rh", "tvoc"];
 
   function getActiveCards() {
+    if (currentSensorData && Array.isArray(currentSensorData.cards) && currentSensorData.cards.length > 0) {
+      return currentSensorData.cards;
+    }
     if (Array.isArray(window.cards) && window.cards.length > 0) {
       return window.cards;
     }

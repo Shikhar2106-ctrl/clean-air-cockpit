@@ -295,27 +295,8 @@
 {% block script %}
 <script>
   /**
-   * Clean Air Cockpit - Customer Tube Selection & Sensor Data Ingestion
+   * Clean Air Cockpit - Customer Device List & Location Setup
    */
-  window.cards = window.cards || [];
-  {% if device_settings and device_settings.cards %}
-  {% if 'AQI' in device_settings.cards %} window.cards.push('AQI'); {% endif %}
-  {% if 'pm2d5' in device_settings.cards %} window.cards.push('pm2d5'); {% endif %}
-  {% if 'pm10' in device_settings.cards %} window.cards.push('pm10'); {% endif %}
-  {% if 'tvoc' in device_settings.cards %} window.cards.push('tvoc'); {% endif %}
-  {% if 'rh' in device_settings.cards %} window.cards.push('rh'); {% endif %}
-  {% if 'temp' in device_settings.cards %} window.cards.push('temp'); {% endif %}
-  {% if 'co2' in device_settings.cards %} window.cards.push('co2'); {% endif %}
-  {% if 'hcho' in device_settings.cards %} window.cards.push('hcho'); {% endif %}
-  {% if 'Virus Index' in device_settings.cards %} window.cards.push('virus_index'); {% endif %}
-  {% if 'Air Pressure' in device_settings.cards %} window.cards.push('air_pressure'); {% endif %}
-  {% if 'Ozone' in device_settings.cards %} window.cards.push('ozone'); {% endif %}
-  {% if 'NO2' in device_settings.cards %} window.cards.push('no2'); {% endif %}
-  {% if 'CO' in device_settings.cards %} window.cards.push('co'); {% endif %}
-  {% else %}
-  window.cards = ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"];
-  {% endif %}
-
   var device_list = [];
 
   {% for iot_device in iot_devices %}
