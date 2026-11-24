@@ -1017,7 +1017,10 @@
       `;
 
       btn.addEventListener("click", () => {
-        $("#navCompare").attr("href", `/compare/${dev.device_id}`);
+        const navC = document.getElementById("navCompare");
+        if (navC) {
+          navC.setAttribute("href", `/compare/${dev.device_id}`);
+        }
         selectDevice(dev);
       });
 
@@ -1091,36 +1094,41 @@
   }
 
   function initLocationControls() {
+    const sTrigger = deviceSearchTrigger || document.getElementById("deviceSearchTrigger");
+    const sBox = deviceSearchBox || document.getElementById("deviceSearchBox");
+    const sInput = deviceSearchInput || document.getElementById("deviceSearchInput");
+    const sClear = deviceSearchClear || document.getElementById("deviceSearchClear");
+
     // Expandable Search: click magnifying glass icon to expand & focus with animation
-    if (deviceSearchTrigger && deviceSearchBox && deviceSearchInput) {
-      deviceSearchTrigger.addEventListener("click", (e) => {
+    if (sTrigger && sBox && sInput) {
+      sTrigger.addEventListener("click", (e) => {
         e.stopPropagation();
-        const isExpanded = deviceSearchBox.classList.contains("is-expanded");
+        const isExpanded = sBox.classList.contains("is-expanded");
         if (!isExpanded) {
-          deviceSearchBox.classList.add("is-expanded");
-          if (typeof deviceSearchInput.focus === "function") {
-            deviceSearchInput.focus();
+          sBox.classList.add("is-expanded");
+          if (typeof sInput.focus === "function") {
+            sInput.focus();
           }
         } else {
           // If already expanded and empty, toggle collapse
           if (!searchKeyword.trim()) {
             clearSearch();
-          } else if (typeof deviceSearchInput.focus === "function") {
-            deviceSearchInput.focus();
+          } else if (typeof sInput.focus === "function") {
+            sInput.focus();
           }
         }
       });
     }
 
     // Real-time filtering as text is typed
-    if (deviceSearchInput) {
-      deviceSearchInput.addEventListener("input", (e) => {
+    if (sInput) {
+      sInput.addEventListener("input", (e) => {
         searchKeyword = e.target.value;
         filterAndRenderDevices();
       });
 
       // Collapse on Escape
-      deviceSearchInput.addEventListener("keydown", (e) => {
+      sInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
           clearSearch();
         }
@@ -1128,8 +1136,8 @@
     }
 
     // Close button (×): clear & collapse search
-    if (deviceSearchClear) {
-      deviceSearchClear.addEventListener("click", (e) => {
+    if (sClear) {
+      sClear.addEventListener("click", (e) => {
         e.stopPropagation();
         clearSearch();
       });
@@ -1137,9 +1145,10 @@
 
     // Collapse when clicking outside if input is empty
     document.addEventListener("click", (e) => {
-      if (deviceSearchBox && deviceSearchBox.classList.contains("is-expanded")) {
-        if (!deviceSearchBox.contains(e.target) && !searchKeyword.trim()) {
-          deviceSearchBox.classList.remove("is-expanded");
+      const activeBox = deviceSearchBox || document.getElementById("deviceSearchBox");
+      if (activeBox && activeBox.classList.contains("is-expanded")) {
+        if (!activeBox.contains(e.target) && !searchKeyword.trim()) {
+          activeBox.classList.remove("is-expanded");
         }
       }
     });
@@ -1648,17 +1657,22 @@
   }
 
   function initMenuControls() {
-    if (menuToggleBtn) {
-      menuToggleBtn.addEventListener("click", (e) => {
+    const toggleBtn = menuToggleBtn || document.getElementById("menuToggleBtn");
+    const closeBtn = menuCloseBtn || document.getElementById("menuCloseBtn");
+    const backdrop = menuBackdrop || document.getElementById("menuBackdrop");
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         toggleMenu();
       });
     }
-    if (menuCloseBtn) menuCloseBtn.addEventListener("click", closeMenu);
-    if (menuBackdrop) menuBackdrop.addEventListener("click", closeMenu);
+    if (closeBtn) closeBtn.addEventListener("click", closeMenu);
+    if (backdrop) backdrop.addEventListener("click", closeMenu);
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && navSidebar && navSidebar.classList.contains("is-open")) {
+      const activeSidebar = navSidebar || document.getElementById("navSidebar");
+      if (e.key === "Escape" && activeSidebar && activeSidebar.classList.contains("is-open")) {
         closeMenu();
       }
     });
@@ -1668,7 +1682,7 @@
       btn.addEventListener("click", () => {
         const action = btn.getAttribute("data-action") || btn.textContent.trim();
         document.querySelectorAll(".nav-menu-item").forEach((item) => item.classList.remove("active"));
-        const parentItem = btn.closest(".nav-menu-item");
+        const parentItem = btn.closest ? btn.closest(".nav-menu-item") : null;
         if (parentItem) parentItem.classList.add("active");
         closeMenu();
         showToast(action === "Dashboard" ? "Dashboard view active" : `Opening ${action}...`);
@@ -1826,27 +1840,45 @@
   // --- Initialization ---
   function init() {
     // 1. Theme
-    applyTheme(getPreferredTheme());
-    if (themeToggleBtn) {
-      themeToggleBtn.addEventListener("click", toggleTheme);
+    try {
+      applyTheme(getPreferredTheme());
+      const tBtn = themeToggleBtn || document.getElementById("themeToggleBtn");
+      if (tBtn) {
+        tBtn.addEventListener("click", toggleTheme);
+      }
+    } catch (e) {
+      console.warn("Theme init warning:", e);
     }
 
     // 2. Navigation Drawer
-    initMenuControls();
+    try {
+      initMenuControls();
+    } catch (e) {
+      console.warn("Menu init warning:", e);
+    }
 
     // 3. IST Clock
-    updateClock();
-    setInterval(updateClock, 1000);
+    try {
+      updateClock();
+      setInterval(updateClock, 1000);
+    } catch (e) {
+      console.warn("Clock init warning:", e);
+    }
 
     // 4. Panel 1 Scenic Background (Mountain Peak 1 by default, auto-cycles every 20s)
-    preloadMountainImages();
-    setIndoorLandscape(0, false);
-    startLandscapeAutoLoop(20000);
-    if (indoorCard) {
-      indoorCard.addEventListener("click", () => {
-        nextIndoorLandscape();
-        startLandscapeAutoLoop(20000);
-      });
+    try {
+      preloadMountainImages();
+      setIndoorLandscape(0, false);
+      startLandscapeAutoLoop(20000);
+      const card = indoorCard || document.getElementById("indoorCard");
+      if (card) {
+        card.addEventListener("click", () => {
+          nextIndoorLandscape();
+          startLandscapeAutoLoop(20000);
+        });
+      }
+    } catch (e) {
+      console.warn("Landscape init warning:", e);
     }
 
     // Proactively clean up any inspector elements or classes
@@ -1854,21 +1886,36 @@
     document.querySelectorAll(".inspector-dimension-badge, .inspector-grid-bar, #ig-test-toolbar").forEach((el) => el.remove());
 
     // 5. Locations Panel Setup
-    initLocationControls();
-    initDeviceList();
-    if (tileMascotView) {
-      tileMascotView.addEventListener("click", () => {
-        toggleMascotCharacter();
-      });
+    try {
+      initLocationControls();
+      initDeviceList();
+      const mascotView = tileMascotView || document.getElementById("tileMascotView");
+      if (mascotView) {
+        mascotView.addEventListener("click", () => {
+          toggleMascotCharacter();
+        });
+      }
+      updateMascotVisibility();
+    } catch (e) {
+      console.warn("Locations init warning:", e);
     }
-    updateMascotVisibility();
 
     // 6. Check & Ingest initial sensor payload
-    checkEmbeddedData();
+    try {
+      checkEmbeddedData();
+    } catch (e) {
+      console.warn("Embedded data init warning:", e);
+    }
 
     // 7. Public Weather & Wind Conditions API Service
-    WeatherService.fetchWeatherData();
-    setInterval(() => WeatherService.fetchWeatherData(), 10 * 60 * 1000);
+    try {
+      if (WeatherService && typeof WeatherService.fetchWeatherData === "function") {
+        WeatherService.fetchWeatherData();
+        setInterval(() => WeatherService.fetchWeatherData(), 10 * 60 * 1000);
+      }
+    } catch (e) {
+      console.warn("Weather init warning:", e);
+    }
 
     // 8. 15-Minute Data Freshness Watchdog
     setInterval(() => {
@@ -1900,6 +1947,13 @@
 
     // 10. Initialize Single-Page Test Dock & Live Sliders
     initTestDock();
+  }
+
+  // Launch on DOM ready (Must run in both dev and production deliverable)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 
   // =========================================================================
@@ -2507,11 +2561,4 @@
     runTestCase: runTestCase,
     getTestCases: () => TEST_CASES
   };
-
-  // Launch on DOM ready
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
 })(); 

@@ -152,6 +152,10 @@ def run_tests():
     assert_test("Race condition protection isCockpitTestMode defined", "window.isCockpitTestMode" in js)
     assert_test("Offline mode forces tubes and displays to zero", 'isContextOffline' in js and 'formattedVal = "0"' in js and 'isDeviceOffline' in js)
     assert_test("No invalid data. reference error in ingestSensorPayload", "data.indoor_aqi_enabled" not in js and "data.device_settings" not in js)
+    assert_test("Zero jQuery $ usage in script.js", "$(" not in js)
+    assert_test("script.js has DOM ready launch block for init()", 'document.addEventListener("DOMContentLoaded", init)' in js and 'init()' in js)
+    assert_test("Nav backdrop rule present in css", ".nav-backdrop" in css and ".cockpit-menu-backdrop" in css)
+    assert_test("Interactive buttons have cursor pointer", ".btn-menu-toggle" in css and "cursor: pointer;" in css)
 
     # Test 13: Revocation Verification of Diagnostics Table & Tube Thickness
     print("\n[13] Testing Revocation of Diagnostics Table & Tube Thickness")
@@ -178,6 +182,8 @@ def run_tests():
             zip_text = "".join(zf.read(n).decode("utf-8", errors="ignore") for n in zip_names if n.endswith((".html", ".js", ".css")))
             assert_test("ZIP contains ZERO references to IntelliGreenMonitorDB", "IntelliGreenMonitorDB" not in zip_text)
             assert_test("ZIP contains ZERO references to dockBtnDiagnostics", "dockBtnDiagnostics" not in zip_text)
+            delivered_js = zf.read("static/dashboard-v4/js/script.js").decode("utf-8")
+            assert_test("ZIP script.js explicitly invokes init() on DOM ready", "init();" in delivered_js and "DOMContentLoaded" in delivered_js)
 
     # Test 14: Direct Telemetry Ingestion from Backend Network Response (`stats` array)
     print("\n[14] Testing Backend Network DevTools Payload Normalization (`stats` array)")

@@ -40,6 +40,16 @@ def clean_script_js(content):
     if split_marker in content:
         # Keep the final IIFE closing "})();"
         cleaned = cleaned.split(split_marker)[0].rstrip() + "\n})();\n"
+    
+    # Defensive guarantee: Ensure DOM launch block is always present
+    if "init();" not in cleaned:
+        launch_block = "\n  // Launch on DOM ready\n  if (document.readyState === \"loading\") {\n    document.addEventListener(\"DOMContentLoaded\", init);\n  } else {\n    init();\n  }\n})();\n"
+        cleaned = cleaned.rstrip()
+        if cleaned.endswith("})();"):
+            cleaned = cleaned[:-5].rstrip() + launch_block
+        else:
+            cleaned = cleaned + launch_block
+
     return cleaned
 
 def create_delivery_zip():

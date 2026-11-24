@@ -199,6 +199,7 @@ body.mode-landscape-tv .air-cockpit {
   color: #1e293b;
   transition: all 0.18s ease;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .btn-menu-toggle:hover {
@@ -243,6 +244,7 @@ body.mode-landscape-tv .air-cockpit {
   font-weight: 600;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .theme-icon-container {
@@ -777,6 +779,7 @@ body.mode-landscape-tv .corporate-grid {
   justify-content: center;
   transition: all 0.2s ease;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .btn-search-trigger svg {
@@ -831,6 +834,12 @@ body.mode-landscape-tv .corporate-grid {
   right: 0.5rem;
   top: 50%;
   transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #94a3b8;
   cursor: pointer;
 }
@@ -1461,6 +1470,7 @@ body:not(.mode-landscape-tv) .corporate-locations.has-single-monitor .tile-masco
 /* --------------------------------------------------------------------------
    Navigation Drawer & Toast
    -------------------------------------------------------------------------- */
+.nav-backdrop,
 .cockpit-menu-backdrop {
   position: fixed;
   top: 0;
@@ -1474,6 +1484,7 @@ body:not(.mode-landscape-tv) .corporate-locations.has-single-monitor .tile-masco
   transition: opacity 0.3s ease;
 }
 
+.nav-backdrop.is-open,
 .cockpit-menu-backdrop.is-open {
   opacity: 1;
   pointer-events: auto;
@@ -1844,7 +1855,8 @@ body:not(.mode-landscape-tv) .corporate-locations.has-single-monitor .tile-masco
   }
 
   body:not(.mode-landscape-tv) .cockpit-header-right {
-    display: contents !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
   body:not(.mode-landscape-tv) .btn-theme-toggle {
@@ -1964,11 +1976,19 @@ body[data-theme="dark"] {
 
 /* Header in Dark Mode */
 [data-theme="dark"] .btn-nav-toggle,
+[data-theme="dark"] .btn-menu-toggle,
 [data-theme="dark"] .theme-toggle-btn,
+[data-theme="dark"] .btn-theme-toggle,
 [data-theme="dark"] .cockpit-time-pill {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
+}
+
+[data-theme="dark"] .btn-menu-toggle:hover,
+[data-theme="dark"] .btn-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
 /* Default Cards: PM2.5, Active Monitors, Weather */
@@ -2139,6 +2159,16 @@ body[data-theme="dark"] {
 [data-theme="dark"] .btn-search-trigger {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .device-search-input {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f8fafc;
+}
+
+[data-theme="dark"] .btn-search-close {
   color: #94a3b8;
 }
 
