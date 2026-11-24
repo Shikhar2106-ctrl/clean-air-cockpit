@@ -251,6 +251,82 @@
   }
 
   // =========================================================================
+  // 1b. Schema Normalization & Direct Telemetry Extractor
+  // =========================================================================
+  /**
+   * Normalizes raw API response into standardized dashboard metrics.
+   * Directly extracts latest telemetry from `stats[0]` without convoluted fallback chains.
+   *
+   * Real Backend Schema:
+   *  - Root: device_id, indoor_device_name, outdoor_station_name, outdoor_aqi, outdoor_pm2d5, cards, stats: [...]
+   *  - stats[0]: aqi_value, pm2d5, pm10, temperature, humidity, co2, tvoc, hcho, etc.
+   */
+  function normalizePayload(raw) {
+    if (!raw || typeof raw !== "object") return raw;
+
+    const p = { ...raw };
+    const latestStat = Array.isArray(p.stats) && p.stats.length > 0 ? p.stats[0] : null;
+
+    function pickFloat(statKey, rootKey, fallback = 0) {
+      if (latestStat && latestStat[statKey] !== undefined && latestStat[statKey] !== null && latestStat[statKey] !== "") {
+        const v = parseFloat(latestStat[statKey]);
+        if (!isNaN(v)) return v;
+      }
+      if (p[rootKey] !== undefined && p[rootKey] !== null && p[rootKey] !== "") {
+        const v = parseFloat(p[rootKey]);
+        if (!isNaN(v)) return v;
+      }
+      return fallback;
+    }
+
+    if (latestStat) {
+      p.aqi = pickFloat("aqi_value", "aqi");
+      p.indoor_aqi = p.aqi;
+      p.pm2d5 = pickFloat("pm2d5", "pm2d5");
+      p.pm10 = pickFloat("pm10", "pm10");
+      p.pm1d0 = pickFloat("pm1d0", "pm1d0");
+      p.temp = pickFloat("temperature", "temp", pickFloat("temperature", "temperature"));
+      p.temperature = p.temp;
+      p.rh = pickFloat("humidity", "rh", pickFloat("humidity", "humidity"));
+      p.humidity = p.rh;
+      p.co2 = pickFloat("co2", "co2");
+      p.tvoc = pickFloat("tvoc", "tvoc");
+      p.hcho = pickFloat("hcho", "hcho");
+      p.ozone = pickFloat("ozone", "ozone");
+      p.no2 = pickFloat("no2", "no2");
+      p.co = pickFloat("co", "co");
+      p.virus_index = pickFloat("virus_index", "virus_index");
+      p.air_pressure = pickFloat("air_pressure", "air_pressure");
+      p.timestamp = latestStat.report_date || latestStat.created_on || p.created_on;
+      p.hasLiveStats = true;
+    } else {
+      p.aqi = parseFloat(p.aqi) || parseFloat(p.indoor_aqi) || 0;
+      p.indoor_aqi = p.aqi;
+      p.pm2d5 = parseFloat(p.pm2d5) || 0;
+      p.pm10 = parseFloat(p.pm10) || 0;
+      p.temp = parseFloat(p.temperature !== undefined ? p.temperature : p.temp) || 0;
+      p.temperature = p.temp;
+      p.rh = parseFloat(p.humidity !== undefined ? p.humidity : p.rh) || 0;
+      p.humidity = p.rh;
+      p.co2 = parseFloat(p.co2) || 0;
+      p.tvoc = parseFloat(p.tvoc) || 0;
+      p.hcho = parseFloat(p.hcho) || 0;
+      p.ozone = parseFloat(p.ozone) || 0;
+      p.no2 = parseFloat(p.no2) || 0;
+      p.co = parseFloat(p.co) || 0;
+      p.pm1d0 = parseFloat(p.pm1d0) || 0;
+      p.timestamp = p.created_on || p.timestamp;
+      p.hasLiveStats = false;
+    }
+
+    p.outdoor_aqi = parseFloat(p.outdoor_aqi) || 0;
+    p.outdoor_pm2_5 = parseFloat(p.outdoor_pm2d5 !== undefined ? p.outdoor_pm2d5 : p.outdoor_pm2_5) || 0;
+    p.outdoor_pm2d5 = p.outdoor_pm2_5;
+
+    return p;
+  }
+
+  // =========================================================================
   // 2. Continuous Telemetry Synchronization Engine (/get-real-time-data/<id>/)
   // =========================================================================
   const SYNC_INTERVAL_MS = 25000; // 25 seconds standard continuous sync
@@ -268,14 +344,17 @@
       return;
     }
 
+    // Direct Extraction & Normalization from API response
+    const normalized = normalizePayload(data);
+
     // Pass data cleanly to UI Ingestion
     if (typeof window.ingestSensorPayload === "function") {
-      window.ingestSensorPayload(data);
+      window.ingestSensorPayload(normalized);
     }
 
     // Update public weather panel if outdoor metrics present
     if (window.WeatherService && typeof window.WeatherService.updateFromSensor === "function") {
-      window.WeatherService.updateFromSensor(data);
+      window.WeatherService.updateFromSensor(normalized);
     }
   }
 
@@ -666,6 +745,7 @@
     predictPm25FromAqi,
     reductionPct,
     resolveParamKey,
+    normalizePayload,
     getRealTimeData,
     scheduleNextSync,
     startDataSynchronization,
@@ -681,6 +761,7 @@
   // Backward-compatibility global aliases for existing callers
   window.PARAM_REGISTRY = PARAM_REGISTRY;
   window.validateParam = validateParam;
+  window.normalizePayload = normalizePayload;
   window.getRealTimeData = getRealTimeData;
   window.startDataSynchronization = startDataSynchronization;
   window.stopDataSynchronization = stopDataSynchronization;

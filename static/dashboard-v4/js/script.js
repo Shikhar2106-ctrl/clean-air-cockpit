@@ -362,7 +362,7 @@
       name: "PM2.5",
       label: "PM2.5",
       unit: "µg/m³",
-      extract: (d) => getVal(d, ["pm2d5", "pm25", "pm2_5"]),
+      extract: (d) => (d && d.pm2d5 !== undefined ? d.pm2d5 : getVal(d, ["pm2d5", "pm25", "pm2_5"])),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("pm2d5", v)
     },
@@ -370,7 +370,7 @@
       name: "PM10",
       label: "PM10",
       unit: "µg/m³",
-      extract: (d) => getVal(d, ["pm10", "pm_10"]),
+      extract: (d) => (d && d.pm10 !== undefined ? d.pm10 : getVal(d, ["pm10", "pm_10"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("pm10", v)
     },
@@ -378,7 +378,7 @@
       name: "PM1.0",
       label: "PM1.0",
       unit: "µg/m³",
-      extract: (d) => getVal(d, ["pm1d0", "pm1", "pm1_0"]),
+      extract: (d) => (d && d.pm1d0 !== undefined ? d.pm1d0 : getVal(d, ["pm1d0", "pm1", "pm1_0"])),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("pm1d0", v)
     },
@@ -386,7 +386,7 @@
       name: "Carbon Dioxide",
       label: "CO₂",
       unit: "ppm",
-      extract: (d) => getVal(d, ["co2"]),
+      extract: (d) => (d && d.co2 !== undefined ? d.co2 : getVal(d, ["co2"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("co2", v)
     },
@@ -394,7 +394,7 @@
       name: "Temperature",
       label: "Temp",
       unit: "°C",
-      extract: (d) => getVal(d, ["temperature", "temp", "t"]),
+      extract: (d) => (d && (d.temp !== undefined ? d.temp : d.temperature !== undefined ? d.temperature : getVal(d, ["temperature", "temp", "t"]))),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("temperature", v)
     },
@@ -402,7 +402,7 @@
       name: "Temperature",
       label: "Temp",
       unit: "°C",
-      extract: (d) => getVal(d, ["temperature", "temp", "t"]),
+      extract: (d) => (d && (d.temp !== undefined ? d.temp : d.temperature !== undefined ? d.temperature : getVal(d, ["temperature", "temp", "t"]))),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("temperature", v)
     },
@@ -410,7 +410,7 @@
       name: "Relative Humidity",
       label: "RH",
       unit: "%",
-      extract: (d) => getVal(d, ["humidity", "rh"]),
+      extract: (d) => (d && (d.rh !== undefined ? d.rh : d.humidity !== undefined ? d.humidity : getVal(d, ["humidity", "rh"]))),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("rh", v)
     },
@@ -418,7 +418,7 @@
       name: "TVOC",
       label: "TVOC",
       unit: "ppm",
-      extract: (d) => getVal(d, ["tvoc", "voc"]),
+      extract: (d) => (d && d.tvoc !== undefined ? d.tvoc : getVal(d, ["tvoc", "voc"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("tvoc", v)
     },
@@ -426,7 +426,7 @@
       name: "Formaldehyde",
       label: "HCHO",
       unit: "mg/m³",
-      extract: (d) => getVal(d, ["hcho", "formaldehyde"]),
+      extract: (d) => (d && d.hcho !== undefined ? d.hcho : getVal(d, ["hcho", "formaldehyde"])),
       format: (v) => Number(v).toFixed(2),
       validate: (v) => validateParam("hcho", v)
     },
@@ -434,7 +434,7 @@
       name: "Virus Index",
       label: "Virus",
       unit: "idx",
-      extract: (d) => getVal(d, ["virus_index", "virusindex", "virus"]),
+      extract: (d) => (d && d.virus_index !== undefined ? d.virus_index : getVal(d, ["virus_index", "virusindex", "virus"])),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("virus_index", v)
     },
@@ -442,7 +442,7 @@
       name: "Air Pressure",
       label: "Pressure",
       unit: "hPa",
-      extract: (d) => getVal(d, ["air_pressure", "airpressure", "pressure"]),
+      extract: (d) => (d && d.air_pressure !== undefined ? d.air_pressure : getVal(d, ["air_pressure", "airpressure", "pressure"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("air_pressure", v)
     },
@@ -450,7 +450,7 @@
       name: "Ozone",
       label: "Ozone",
       unit: "µg/m³",
-      extract: (d) => getVal(d, ["ozone", "o3"]),
+      extract: (d) => (d && d.ozone !== undefined ? d.ozone : getVal(d, ["ozone", "o3"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("ozone", v)
     },
@@ -458,7 +458,7 @@
       name: "Nitrogen Dioxide",
       label: "NO2",
       unit: "µg/m³",
-      extract: (d) => getVal(d, ["no2"]),
+      extract: (d) => (d && d.no2 !== undefined ? d.no2 : getVal(d, ["no2"])),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("no2", v)
     },
@@ -466,7 +466,7 @@
       name: "Carbon Monoxide",
       label: "CO",
       unit: "mg/m³",
-      extract: (d) => getVal(d, ["co"]),
+      extract: (d) => (d && d.co !== undefined ? d.co : getVal(d, ["co"])),
       format: (v) => (v % 1 === 0 ? v : Number(v).toFixed(1)),
       validate: (v) => validateParam("co", v)
     },
@@ -474,7 +474,7 @@
       name: "Indoor AQI",
       label: "AQI",
       unit: "",
-      extract: (d) => getVal(d, ["aqi", "indoor_aqi"]),
+      extract: (d) => (d && (d.aqi !== undefined ? d.aqi : d.indoor_aqi !== undefined ? d.indoor_aqi : getVal(d, ["aqi", "indoor_aqi"]))),
       format: (v) => Math.round(v),
       validate: (v) => validateParam("indoor_aqi", v)
     },
@@ -838,7 +838,7 @@
 
     // Update bar height, background color, and values via validateParam
     const isContextOffline = Boolean(
-      (dataContext && (dataContext.offline === true || dataContext.is_offline === true || (dataContext.device_status && ["off", "offline"].includes(String(dataContext.device_status).toLowerCase()))))
+      (dataContext && (dataContext.offline === true && !dataContext.hasLiveStats))
     );
 
     resolvedParams.forEach((def) => {
@@ -1158,8 +1158,76 @@
   let lastSuccessfulDataReceivedTime = Date.now();
   let currentSensorData = null;
 
-  function ingestSensorPayload(payload) {
-    if (!payload) return;
+  // Schema Normalization & Direct Telemetry Extractor (from stats[0] or root)
+  function normalizePayload(raw) {
+    if (window.CockpitAPI && typeof window.CockpitAPI.normalizePayload === "function") {
+      return window.CockpitAPI.normalizePayload(raw);
+    }
+    if (!raw || typeof raw !== "object") return raw;
+    const p = { ...raw };
+    const latestStat = Array.isArray(p.stats) && p.stats.length > 0 ? p.stats[0] : null;
+
+    function pickFloat(statKey, rootKey, fallback = 0) {
+      if (latestStat && latestStat[statKey] !== undefined && latestStat[statKey] !== null && latestStat[statKey] !== "") {
+        const v = parseFloat(latestStat[statKey]);
+        if (!isNaN(v)) return v;
+      }
+      if (p[rootKey] !== undefined && p[rootKey] !== null && p[rootKey] !== "") {
+        const v = parseFloat(p[rootKey]);
+        if (!isNaN(v)) return v;
+      }
+      return fallback;
+    }
+
+    if (latestStat) {
+      p.aqi = pickFloat("aqi_value", "aqi");
+      p.indoor_aqi = p.aqi;
+      p.pm2d5 = pickFloat("pm2d5", "pm2d5");
+      p.pm10 = pickFloat("pm10", "pm10");
+      p.pm1d0 = pickFloat("pm1d0", "pm1d0");
+      p.temp = pickFloat("temperature", "temp", pickFloat("temperature", "temperature"));
+      p.temperature = p.temp;
+      p.rh = pickFloat("humidity", "rh", pickFloat("humidity", "humidity"));
+      p.humidity = p.rh;
+      p.co2 = pickFloat("co2", "co2");
+      p.tvoc = pickFloat("tvoc", "tvoc");
+      p.hcho = pickFloat("hcho", "hcho");
+      p.ozone = pickFloat("ozone", "ozone");
+      p.no2 = pickFloat("no2", "no2");
+      p.co = pickFloat("co", "co");
+      p.virus_index = pickFloat("virus_index", "virus_index");
+      p.air_pressure = pickFloat("air_pressure", "air_pressure");
+      p.timestamp = latestStat.report_date || latestStat.created_on || p.created_on;
+      p.hasLiveStats = true;
+    } else {
+      p.aqi = parseFloat(p.aqi) || parseFloat(p.indoor_aqi) || 0;
+      p.indoor_aqi = p.aqi;
+      p.pm2d5 = parseFloat(p.pm2d5) || 0;
+      p.pm10 = parseFloat(p.pm10) || 0;
+      p.temp = parseFloat(p.temperature !== undefined ? p.temperature : p.temp) || 0;
+      p.temperature = p.temp;
+      p.rh = parseFloat(p.humidity !== undefined ? p.humidity : p.rh) || 0;
+      p.humidity = p.rh;
+      p.co2 = parseFloat(p.co2) || 0;
+      p.tvoc = parseFloat(p.tvoc) || 0;
+      p.hcho = parseFloat(p.hcho) || 0;
+      p.ozone = parseFloat(p.ozone) || 0;
+      p.no2 = parseFloat(p.no2) || 0;
+      p.co = parseFloat(p.co) || 0;
+      p.pm1d0 = parseFloat(p.pm1d0) || 0;
+      p.timestamp = p.created_on || p.timestamp;
+      p.hasLiveStats = false;
+    }
+
+    p.outdoor_aqi = parseFloat(p.outdoor_aqi) || 0;
+    p.outdoor_pm2_5 = parseFloat(p.outdoor_pm2d5 !== undefined ? p.outdoor_pm2d5 : p.outdoor_pm2_5) || 0;
+    p.outdoor_pm2d5 = p.outdoor_pm2_5;
+    return p;
+  }
+
+  function ingestSensorPayload(rawPayload) {
+    if (!rawPayload) return;
+    const payload = normalizePayload(rawPayload);
     currentSensorData = payload;
     window.lastSensorPayload = payload;
     lastSuccessfulDataReceivedTime = Date.now();
@@ -1178,49 +1246,24 @@
       window.currentDeviceId = String(devId);
     }
 
-    // Determine Offline Status (if explicit flag, or if data timestamp is older than 15 minutes)
+    // Determine Offline Status:
+    // Only zero out displays when explicitly offline AND no live stats exist
     let isDeviceOffline = false;
     let offlineReason = "";
 
-    if (payload.offline === true || payload.is_offline === true) {
+    if (payload.offline === true && !payload.hasLiveStats) {
       isDeviceOffline = true;
       offlineReason = "Device Offline";
-    } else if (payload.device_status && ["off", "offline"].includes(String(payload.device_status).toLowerCase())) {
-      isDeviceOffline = true;
-      offlineReason = "Device Off";
     }
 
-    // Check payload timestamp against current client time for 15-minute staleness
-    const rawTime = payload.timestamp || payload.time || payload.datetime || payload.last_seen || payload.updated_at || payload.created_at;
-    let dataTimestamp = null;
-    if (rawTime) {
-      if (typeof rawTime === "number") {
-        dataTimestamp = rawTime > 1e11 ? rawTime : rawTime * 1000;
-      } else if (typeof rawTime === "string") {
-        const parsed = Date.parse(rawTime);
-        if (!isNaN(parsed)) {
-          dataTimestamp = parsed;
-        } else if (rawTime.includes(" ")) {
-          const reParsed = Date.parse(rawTime.replace(" ", "T"));
-          if (!isNaN(reParsed)) dataTimestamp = reParsed;
-        }
-      }
-    }
+    // Synchronize offline status with devices in allDevices list (for indicator dot)
+    const isDeviceOffStatus = (payload.offline === true) ||
+      (payload.device_status && ["off", "offline"].includes(String(payload.device_status).toLowerCase()));
 
-    if (dataTimestamp) {
-      const timeDiffMs = Date.now() - dataTimestamp;
-      if (timeDiffMs > OFFLINE_THRESHOLD_MS) {
-        isDeviceOffline = true;
-        const diffMins = Math.floor(timeDiffMs / (60 * 1000));
-        offlineReason = `Offline (${diffMins}m stale)`;
-      }
-    }
-
-    // Synchronize offline status with devices in allDevices list
     if (devId && Array.isArray(allDevices)) {
       const devObj = allDevices.find((d) => String(d.device_id) === String(devId));
       if (devObj) {
-        devObj.offline = isDeviceOffline;
+        devObj.offline = isDeviceOffStatus;
       }
     }
 
@@ -1237,6 +1280,22 @@
     }
 
     // Update Indoor Last Updated Timestamp display
+    const rawTime = payload.timestamp || payload.time || payload.created_on;
+    let dataTimestamp = null;
+    if (rawTime) {
+      if (typeof rawTime === "number") {
+        dataTimestamp = rawTime > 1e11 ? rawTime : rawTime * 1000;
+      } else if (typeof rawTime === "string") {
+        const parsed = Date.parse(rawTime);
+        if (!isNaN(parsed)) {
+          dataTimestamp = parsed;
+        } else if (rawTime.includes(" ")) {
+          const reParsed = Date.parse(rawTime.replace(" ", "T"));
+          if (!isNaN(reParsed)) dataTimestamp = reParsed;
+        }
+      }
+    }
+
     const updateTargetDate = dataTimestamp ? new Date(dataTimestamp) : new Date(lastSuccessfulDataReceivedTime || Date.now());
     const timeTarget = indoorLastUpdatedTimeEl || document.getElementById("indoorLastUpdatedTime");
     if (timeTarget) {
@@ -1252,12 +1311,11 @@
     // Update active highlight in locations panel
     filterAndRenderDevices();
 
-    // 2. Extract values (added "outdoor_pm2_5" and all AQI variations)
-    let rawIndoorAqi = getVal(payload, ["aqi", "indoor_aqi"], null);
+    // 2. Direct Extraction of values (no long fallback chains)
+    let rawIndoorAqi = payload.aqi !== undefined ? payload.aqi : 0;
     let indoorAqiVal = (rawIndoorAqi !== null && !isNaN(rawIndoorAqi)) ? rawIndoorAqi : 0;
 
-    // Check all possible AQI keys, with fallback to the reading on screen
-    let outdoorAqiVal = getVal(payload, ["outdoor_aqi", "outdooraqi", "outdoor_AQI", "outdoorAqi", "aqi_outdoor"]);
+    let outdoorAqiVal = payload.outdoor_aqi !== undefined ? payload.outdoor_aqi : 0;
     if (!outdoorAqiVal || outdoorAqiVal <= 0) {
       const aqiEl = document.getElementById("outdoorAqiValue");
       if (aqiEl && aqiEl.textContent) {
@@ -1265,10 +1323,10 @@
       }
     }
 
-    let rawPm25 = getVal(payload, ["pm2d5", "pm25", "pm2_5"], null);
+    let rawPm25 = payload.pm2d5 !== undefined ? payload.pm2d5 : 0;
     let pm25Val = (rawPm25 !== null && !isNaN(rawPm25)) ? rawPm25 : 0;
 
-    // When device is offline, enforce all indoor parameters to zero
+    // When device is truly offline with no stats, enforce all indoor parameters to zero
     if (isDeviceOffline) {
       indoorAqiVal = 0;
       rawIndoorAqi = 0;
@@ -1280,11 +1338,10 @@
     const hasIndoorAqi = rawIndoorAqi !== null && !isNaN(rawIndoorAqi) && rawIndoorAqi > 0;
     const hasIndoorPm25 = rawPm25 !== null && !isNaN(rawPm25) && rawPm25 >= 0;
 
-    // Added "outdoor_pm2_5" (with underscore) so it matches your backend key
-    let outdoorPm25Val = getVal(payload, ["outdoor_pm2_5", "outdoor_pm2d5", "outdoor_pm25", "outdoorPm25"]);
-    const outdoorPm10Val = getVal(payload, ["outdoor_pm1d0", "outdoor_pm10", "outdoor_pm100"]);
+    let outdoorPm25Val = payload.outdoor_pm2_5 !== undefined ? payload.outdoor_pm2_5 : (payload.outdoor_pm2d5 || 0);
+    const outdoorPm10Val = payload.outdoor_pm1d0 !== undefined ? payload.outdoor_pm1d0 : (payload.outdoor_pm10 || 0);
 
-    // Fallback: If outdoor PM2.5 is not provided (0, null, "NA", or missing), predict it from Outdoor AQI
+    // Fallback: If outdoor PM2.5 is not provided (> 0), predict it from Outdoor AQI
     let isOutdoorPm25Predicted = false;
     if ((!outdoorPm25Val || outdoorPm25Val <= 0 || isNaN(outdoorPm25Val)) && outdoorAqiVal > 0) {
       outdoorPm25Val = predictPm25FromAqi(outdoorAqiVal);
@@ -1454,6 +1511,9 @@
     }
 
     // Render Dynamic Tubes for active cards
+    if (Array.isArray(payload.cards) && payload.cards.length > 0) {
+      window.cards = payload.cards.slice();
+    }
     renderDynamicTubes(getActiveCards(), payload);
 
     // 7. Panel 5: Purification Impact & Reduction

@@ -177,6 +177,16 @@ def run_tests():
             assert_test("ZIP contains ZERO references to IntelliGreenMonitorDB", "IntelliGreenMonitorDB" not in zip_text)
             assert_test("ZIP contains ZERO references to dockBtnDiagnostics", "dockBtnDiagnostics" not in zip_text)
 
+    # Test 14: Direct Telemetry Ingestion from Backend Network Response (`stats` array)
+    print("\n[14] Testing Backend Network DevTools Payload Normalization (`stats` array)")
+    api_js = read_static("dashboard-v4/js/api.js")
+    script_js = read_static("dashboard-v4/js/script.js")
+    assert_test("api.js contains normalizePayload function", "function normalizePayload" in api_js)
+    assert_test("script.js contains normalizePayload function", "function normalizePayload" in script_js)
+    assert_test("api.js exports normalizePayload globally", "window.normalizePayload = normalizePayload" in api_js or "normalizePayload" in api_js)
+    assert_test("stats[0].aqi_value mapped directly", "aqi_value" in api_js and "aqi_value" in script_js)
+    assert_test("No forced zeroing when hasLiveStats is true", "hasLiveStats" in script_js)
+
     print("\n" + "=" * 70)
     print(f"🏁 TEST SUMMARY: {passed}/{total} Passed ({'100%' if passed == total else 'FAIL'})")
     print("=" * 70)
