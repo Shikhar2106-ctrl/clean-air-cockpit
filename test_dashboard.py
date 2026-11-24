@@ -195,6 +195,16 @@ def run_tests():
     assert_test("stats[0].aqi_value mapped directly", "aqi_value" in api_js and "aqi_value" in script_js)
     assert_test("No forced zeroing when hasLiveStats is true", "hasLiveStats" in script_js)
 
+    # Test 15: Indoor AQI Card 20-Second Mountain Landscape Loop & Resilient Resolution
+    print("\n[15] Testing Indoor AQI Card 20-Second Mountain Landscape Loop Engine")
+    css = read_static("dashboard-v4/css/style.css")
+    assert_test("CSS defines all 12 mountain landscape data attributes", all(f'[data-mountain="mountain-{i}"]' in css for i in range(1, 13)))
+    assert_test("CSS .corporate-indoor-bg transition is smooth (0.5s)", "transition: opacity 0.5s ease-in-out;" in css)
+    assert_test("script.js dynamically queries indoorCardBg in setIndoorLandscape", "indoorCardBg || document.getElementById(\"indoorCardBg\")" in script_js)
+    assert_test("script.js 20-second loop auto-timer is configured", "startLandscapeAutoLoop(20000)" in script_js)
+    assert_test("script.js exports window.CockpitLandscape controller", "window.CockpitLandscape" in script_js)
+    assert_test("resolveAssetUrl provides multi-tier link/script/img fallback", "styleLink" in script_js and "scriptTag" in script_js and "refImgs" in script_js)
+
     print("\n" + "=" * 70)
     print(f"🏁 TEST SUMMARY: {passed}/{total} Passed ({'100%' if passed == total else 'FAIL'})")
     print("=" * 70)

@@ -620,37 +620,79 @@
     if (window.STATIC_ASSETS_URL) {
       return window.STATIC_ASSETS_URL + url.replace(/^assets\//, "");
     }
-    const refImg = document.querySelector(".brand-emblem") || document.getElementById("leafMascotImg");
-    if (refImg && refImg.src && refImg.src.includes("/assets/")) {
-      const basePath = refImg.src.substring(0, refImg.src.indexOf("/assets/") + 8);
-      return basePath + url.replace(/^assets\//, "");
+    // 1. Detect from loaded style.css link tag
+    try {
+      const styleLink = document.querySelector('link[href*="style.css"]');
+      if (styleLink && styleLink.href) {
+        const match = styleLink.href.match(/^(.*\/)css\/style\.css/);
+        if (match) {
+          return match[1] + url;
+        }
+      }
+    } catch (_) {}
+    // 2. Detect from loaded script.js script tag
+    try {
+      const scriptTag = document.querySelector('script[src*="script.js"]');
+      if (scriptTag && scriptTag.src) {
+        const match = scriptTag.src.match(/^(.*\/)js\/script\.js/);
+        if (match) {
+          return match[1] + url;
+        }
+      }
+    } catch (_) {}
+    // 3. Detect from reference images in the DOM
+    try {
+      const refImgs = document.querySelectorAll('img[src*="/assets/"]');
+      for (let i = 0; i < refImgs.length; i++) {
+        const src = refImgs[i].src || "";
+        if (src.includes("/assets/") && !src.includes("{%")) {
+          const basePath = src.substring(0, src.indexOf("/assets/") + 8);
+          return basePath + url.replace(/^assets\//, "");
+        }
+      }
+    } catch (_) {}
+    // 4. Default standard Django static location
+    if (typeof window !== "undefined" && window.location && window.location.origin) {
+      return window.location.origin + "/static/dashboard-v4/" + url;
     }
     return url;
   }
 
   function preloadMountainImages() {
     INDOOR_LANDSCAPES.forEach((item) => {
-      const img = new Image();
-      img.src = resolveAssetUrl(item.url);
+      try {
+        const img = new Image();
+        const resolved = resolveAssetUrl(item.url);
+        if (resolved) img.src = resolved;
+      } catch (_) {}
     });
   }
 
   function setIndoorLandscape(index, withFade = true) {
     currentLandscapeIndex = ((index % INDOOR_LANDSCAPES.length) + INDOOR_LANDSCAPES.length) % INDOOR_LANDSCAPES.length;
     const landscape = INDOOR_LANDSCAPES[currentLandscapeIndex];
-    if (!indoorCardBg) return;
+    const bg = indoorCardBg || document.getElementById("indoorCardBg");
+    if (!bg) return;
 
     const resolvedUrl = resolveAssetUrl(landscape.url);
+
+    const applyLandscape = () => {
+      bg.setAttribute("data-mountain", landscape.id);
+      if (resolvedUrl) {
+        bg.style.backgroundImage = `url("${resolvedUrl}")`;
+      }
+    };
+
     if (withFade) {
-      indoorCardBg.classList.add("is-fading");
+      bg.classList.add("is-fading");
       setTimeout(() => {
-        indoorCardBg.style.backgroundImage = `url("${resolvedUrl}")`;
-        requestAnimationFrame(() => {
-          indoorCardBg.classList.remove("is-fading");
-        });
-      }, 420);
+        applyLandscape();
+        setTimeout(() => {
+          bg.classList.remove("is-fading");
+        }, 50);
+      }, 350);
     } else {
-      indoorCardBg.style.backgroundImage = `url("${resolvedUrl}")`;
+      applyLandscape();
     }
   }
 
@@ -662,7 +704,7 @@
     stopLandscapeAutoLoop();
     landscapeAutoTimer = setInterval(() => {
       nextIndoorLandscape();
-    }, intervalMs);
+    }, Math.max(1000, intervalMs));
   }
 
   function stopLandscapeAutoLoop() {
@@ -675,6 +717,21 @@
   function restartLandscapeAutoLoop(intervalMs = 20000) {
     startLandscapeAutoLoop(intervalMs);
   }
+
+  // Expose Landscape Controller globally for verification & testing
+  window.CockpitLandscape = {
+    next: nextIndoorLandscape,
+    set: setIndoorLandscape,
+    start: startLandscapeAutoLoop,
+    stop: stopLandscapeAutoLoop,
+    get currentIndex() {
+      return currentLandscapeIndex;
+    },
+    get currentItem() {
+      return INDOOR_LANDSCAPES[currentLandscapeIndex];
+    },
+    landscapes: INDOOR_LANDSCAPES
+  };
 
   // --- Single Active Monitor Mascot Loop (leaf_mascot.png & eco_bulb_clean.png) ---
   let mascotTimer = null;

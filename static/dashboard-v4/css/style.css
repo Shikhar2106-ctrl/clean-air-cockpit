@@ -374,7 +374,7 @@ body.mode-landscape-tv .corporate-grid {
   background-position: center bottom;
   background-repeat: no-repeat;
   opacity: 1.0;
-  transition: opacity 1.2s ease;
+  transition: opacity 0.5s ease-in-out;
   z-index: 1;
   pointer-events: none;
 }
@@ -382,6 +382,20 @@ body.mode-landscape-tv .corporate-grid {
 .corporate-indoor-bg.is-fading {
   opacity: 0;
 }
+
+/* Bulletproof CSS-level mountain landscape rules for all 12 peaks */
+.corporate-indoor-bg[data-mountain="mountain-1"] { background-image: url('../assets/mountain_1.png'); }
+.corporate-indoor-bg[data-mountain="mountain-2"] { background-image: url('../assets/mountain_2.png'); }
+.corporate-indoor-bg[data-mountain="mountain-3"] { background-image: url('../assets/mountain_3.png'); }
+.corporate-indoor-bg[data-mountain="mountain-4"] { background-image: url('../assets/mountain_4.png'); }
+.corporate-indoor-bg[data-mountain="mountain-5"] { background-image: url('../assets/mountain_5.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-6"] { background-image: url('../assets/mountain_6.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-7"] { background-image: url('../assets/mountain_7.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-8"] { background-image: url('../assets/mountain_8.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-9"] { background-image: url('../assets/mountain_9.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-10"] { background-image: url('../assets/mountain_10.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-11"] { background-image: url('../assets/mountain_11.jpeg'); }
+.corporate-indoor-bg[data-mountain="mountain-12"] { background-image: url('../assets/mountains_12.jpeg'); }
 
 /* Smooth left-to-right mint-green gradient overlay over the left side of the photo */
 .corporate-indoor::before {
