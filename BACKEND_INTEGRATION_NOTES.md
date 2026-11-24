@@ -68,8 +68,10 @@ When only a single active monitor is present (`totalCount <= 1`), Panel 4 ("Acti
 ---
 
 ## 5. Dynamic Air Quality & Race-Condition Safeguards
-1. **Indoor AQI Disabled via Django Admin**:
-   - If `indoor_aqi_enabled` is set to `False` in Django settings, Panel 1 automatically switches to **Indoor PM2.5** with corresponding CPCB color coding.
+1. **Indoor AQI vs PM2.5 Dynamic Display (Controlled via `cards` parameter)**:
+   - If the `cards` parameter array returned by the API (or template context) does **not** contain `"AQI"`, Panel 1 dynamically switches to display **Indoor PM2.5** (value, condition label, and CPCB color coding) in place of Indoor AQI.
+   - If `"AQI"` is present in `cards`, Panel 1 displays Indoor AQI normally.
+   - Panel 3 (dynamic air element tubes) automatically renders the pollutant metrics (`pm2d5`, `pm10`, `co2`, `tvoc`, `rh`, `temp`, etc.) while cleanly excluding AQI from the test tubes bars.
 2. **Pollution Reduction Box Safety**:
    - When Indoor AQI > Outdoor AQI (e.g., indoor pollution spike), the green "Reduction %" pill automatically hides to prevent showing negative or nonsensical reduction claims.
 3. **Offline Monitor Status**:

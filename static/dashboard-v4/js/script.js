@@ -488,7 +488,7 @@
     }
   };
 
-  const DEFAULT_CARDS = ["pm2d5", "pm10", "co2", "temp", "rh", "tvoc"];
+  const DEFAULT_CARDS = ["AQI", "pm2d5", "pm10", "co2", "temp", "rh", "tvoc"];
 
   function getActiveCards() {
     if (Array.isArray(window.cards) && window.cards.length > 0) {
@@ -781,17 +781,22 @@
   function renderDynamicTubes(cardsList, dataContext) {
     if (!corporateBarsEl) return;
     const cards = (Array.isArray(cardsList) && cardsList.length > 0) ? cardsList : DEFAULT_CARDS;
-    if (corporateBarsEl.style && corporateBarsEl.style.setProperty) {
-      corporateBarsEl.style.setProperty("--bars-count", cards.length);
-    }
 
     const resolvedParams = [];
     cards.forEach((rawKey) => {
+      const clean = String(rawKey).trim().toUpperCase();
+      if (clean === "AQI" || clean === "INDOOR_AQI" || clean === "OUTDOOR_AQI") {
+        return; // AQI is displayed in Panel 1 & 2, not in the Panel 3 air element tubes
+      }
       const k = resolveParamKey(rawKey);
-      if (k && PARAMETER_REGISTRY[k]) {
+      if (k && PARAMETER_REGISTRY[k] && k !== "indoor_aqi" && k !== "outdoor_aqi") {
         resolvedParams.push({ ...PARAMETER_REGISTRY[k], key: k });
       }
     });
+
+    if (corporateBarsEl.style && corporateBarsEl.style.setProperty) {
+      corporateBarsEl.style.setProperty("--bars-count", resolvedParams.length);
+    }
 
     if (resolvedParams.length === 0) return;
 
@@ -1354,14 +1359,12 @@
     const pm25Info = validateParam("pm2d5", pm25Val);
 
     // 4. Panel 1: Indoor AQI / PM2.5 Dynamic Display
-    // Admin check: If indoor AQI is disabled at Django admin side, or via payload/settings,
-    // display Indoor PM2.5 in place of Indoor AQI.
-    const isIndoorAqiDisabled = (
-      window.indoor_aqi_enabled === false ||
-      window.isIndoorAqiDisabled === true ||
-      (payload && (payload.indoor_aqi_enabled === false || payload.show_indoor_aqi === false || payload.show_aqi === false)) ||
-      (payload && payload.device_settings && (payload.device_settings.indoor_aqi === false || payload.device_settings.show_indoor_aqi === false || payload.device_settings.show_aqi === false || payload.device_settings.aqi_enabled === false))
-    );
+    // If the cards parameter does not contain "AQI", then Indoor PM2.5 is displayed in place of Indoor AQI.
+    const activeCards = (payload && Array.isArray(payload.cards) && payload.cards.length > 0)
+      ? payload.cards
+      : (Array.isArray(window.cards) && window.cards.length > 0 ? window.cards : DEFAULT_CARDS);
+    const hasAqiCard = activeCards.some((c) => String(c).trim().toUpperCase() === "AQI");
+    const isIndoorAqiDisabled = !hasAqiCard;
 
     const effectiveHasIndoorAqi = hasIndoorAqi && !isIndoorAqiDisabled && !isDeviceOffline;
     const showIndoorPm25Instead = (isIndoorAqiDisabled || (!hasIndoorAqi && hasIndoorPm25)) && !isDeviceOffline;
@@ -1904,74 +1907,16 @@
   // =========================================================================
   const TEST_CASES = {
     default: {
-      name: "Default Baseline (3 Monitors, 6 Tubes, Indoor AQI 41, Outdoor AQI 294)",
+      name: "Default Baseline (6 Monitors, 6 Tubes, Indoor AQI 41, Outdoor AQI 294)",
       devices: [
         { device_id: "6699", device_name: "KNMA", offline: true },
         { device_id: "6851", device_name: "Agoda", offline: false },
-        { device_id: "6871", device_name: "Scope Minar", offline: false }
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
-      payload: {
-        device_id: "6699",
-        indoor_device_name: "PTI First Floor",
-        aqi: 41,
-        pm2d5: 24.8,
-        pm10: 25.0,
-        co2: 730,
-        tvoc: 1016,
-        rh: 60,
-        temp: 25.4,
-        outdoor_aqi: 294,
-        outdoor_pm2_5: 145.0,
-        outdoor_pm10: 260.0,
-        outdoor_station_name: "Nehru Nagar, Delhi - DPCC",
-        outdoor_temperature: 16,
-        weather_condition: "Clear Sky",
-        weather_high: 25,
-        weather_low: 13,
-        wind_speed: 4,
-        offline: false
-      }
-    },
-    indoor_gt_outdoor: {
-      name: "Indoor AQI > Outdoor AQI (In: 210 Poor, Out: 55 Satisfactory -> Reduction Box Disappears)",
-      devices: [
-        { device_id: "6699", device_name: "KNMA", offline: false },
-        { device_id: "6851", device_name: "Agoda", offline: false }
-      ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
-      payload: {
-        device_id: "6699",
-        indoor_device_name: "PTI First Floor",
-        aqi: 210,
-        pm2d5: 110.0,
-        pm10: 165.0,
-        co2: 950,
-        tvoc: 1320,
-        rh: 62,
-        temp: 25.1,
-        outdoor_aqi: 55,
-        outdoor_pm2_5: 18.0,
-        outdoor_pm10: 42.0,
-        outdoor_station_name: "Nehru Nagar, Delhi - DPCC",
-        outdoor_temperature: 18,
-        weather_condition: "Clear Sky",
-        weather_high: 26,
-        weather_low: 14,
-        wind_speed: 6,
-        offline: false
-      }
-    },
-    indoor_aqi_disabled: {
-      name: "Indoor AQI Disabled at Django Admin Side (Panel 1 shows Indoor PM2.5 & its data)",
-      devices: [
-        { device_id: "6699", device_name: "KNMA", offline: false },
-        { device_id: "6851", device_name: "Agoda", offline: false }
-      ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: false,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
       payload: {
         device_id: "6699",
         indoor_device_name: "PTI First Floor",
@@ -1992,20 +1937,88 @@
         weather_low: 13,
         wind_speed: 4,
         offline: false,
-        device_settings: {
-          indoor_aqi: false,
-          show_indoor_aqi: false
-        }
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
+      }
+    },
+    indoor_gt_outdoor: {
+      name: "Indoor AQI > Outdoor AQI (In: 210 Poor, Out: 55 Satisfactory -> Reduction Box Disappears)",
+      devices: [
+        { device_id: "6699", device_name: "KNMA", offline: false },
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
+      ],
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
+      payload: {
+        device_id: "6699",
+        indoor_device_name: "PTI First Floor",
+        aqi: 210,
+        pm2d5: 110.0,
+        pm10: 165.0,
+        co2: 950,
+        tvoc: 1320,
+        rh: 62,
+        temp: 25.1,
+        outdoor_aqi: 55,
+        outdoor_pm2_5: 18.0,
+        outdoor_pm10: 42.0,
+        outdoor_station_name: "Nehru Nagar, Delhi - DPCC",
+        outdoor_temperature: 18,
+        weather_condition: "Clear Sky",
+        weather_high: 26,
+        weather_low: 14,
+        wind_speed: 6,
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
+      }
+    },
+    indoor_aqi_disabled: {
+      name: "Indoor AQI Disabled via cards Parameter (cards does not contain AQI -> Panel 1 shows Indoor PM2.5)",
+      devices: [
+        { device_id: "6699", device_name: "KNMA", offline: false },
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
+      ],
+      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
+      payload: {
+        device_id: "6699",
+        indoor_device_name: "PTI First Floor",
+        aqi: 41,
+        pm2d5: 24.8,
+        pm10: 25.0,
+        co2: 730,
+        tvoc: 1016,
+        rh: 60,
+        temp: 25.4,
+        outdoor_aqi: 294,
+        outdoor_pm2_5: 145.0,
+        outdoor_pm10: 260.0,
+        outdoor_station_name: "Nehru Nagar, Delhi - DPCC",
+        outdoor_temperature: 16,
+        weather_condition: "Clear Sky",
+        weather_high: 25,
+        weather_low: 13,
+        wind_speed: 4,
+        offline: false,
+        cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     },
     indoor_disabled_gt_outdoor: {
-      name: "Indoor AQI Disabled & PM2.5 > Outdoor (Shows PM2.5 in P1, In: 120 vs Out: 35 -> Reduction Disappears)",
+      name: "Indoor AQI Disabled & PM2.5 > Outdoor (cards does not contain AQI -> Shows PM2.5 in P1, In: 120 vs Out: 35 -> Reduction Disappears)",
       devices: [
         { device_id: "6699", device_name: "KNMA", offline: false },
-        { device_id: "6851", device_name: "Agoda", offline: false }
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
       cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: false,
       payload: {
         device_id: "6699",
         indoor_device_name: "PTI First Floor",
@@ -2026,10 +2039,7 @@
         weather_low: 15,
         wind_speed: 5,
         offline: false,
-        device_settings: {
-          indoor_aqi: false,
-          show_indoor_aqi: false
-        }
+        cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     },
     single_monitor: {
@@ -2037,8 +2047,7 @@
       devices: [
         { device_id: "7701", device_name: "Corporate Boardroom", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
       payload: {
         device_id: "7701",
         indoor_device_name: "Corporate Boardroom",
@@ -2058,18 +2067,21 @@
         weather_high: 26,
         weather_low: 14,
         wind_speed: 5,
-        offline: false
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     },
     multiple_tubes: {
       name: "Multiple Test Tubes (10 Dynamic Air Elements: PM2.5, PM10, CO2, TVOC, RH, Temp, HCHO, Ozone, NO2, CO)",
       devices: [
-        { device_id: "6699", device_name: "KNMA", offline: false },
+        { device_id: "6699", device_name: "KNMA", offline: true },
         { device_id: "6851", device_name: "Agoda", offline: false },
-        { device_id: "6871", device_name: "Scope Minar", offline: false }
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"],
       payload: {
         device_id: "6699",
         indoor_device_name: "Advanced R&D Clean Lab",
@@ -2093,7 +2105,8 @@
         weather_high: 25,
         weather_low: 13,
         wind_speed: 3,
-        offline: false
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
       }
     },
     single_monitor_multiple_tubes: {
@@ -2101,8 +2114,7 @@
       devices: [
         { device_id: "9901", device_name: "Executive Suite", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"],
       payload: {
         device_id: "9901",
         indoor_device_name: "Executive Suite",
@@ -2126,16 +2138,21 @@
         weather_high: 27,
         weather_low: 15,
         wind_speed: 6,
-        offline: false
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
       }
     },
     offline: {
       name: "Offline Monitor (Device status offline with grey indicators)",
       devices: [
-        { device_id: "6699", device_name: "KNMA", offline: true }
+        { device_id: "6699", device_name: "KNMA", offline: true },
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
       payload: {
         device_id: "6699",
         indoor_device_name: "PTI First Floor",
@@ -2156,17 +2173,21 @@
         weather_low: 13,
         wind_speed: 4,
         offline: true,
-        device_status: "offline"
+        device_status: "offline",
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     },
     severe: {
       name: "Severe Pollution (Outdoor AQI 445 Severe, Indoor AQI 85 Moderate)",
       devices: [
         { device_id: "6699", device_name: "KNMA", offline: false },
-        { device_id: "6851", device_name: "Agoda", offline: false }
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
       payload: {
         device_id: "6699",
         indoor_device_name: "PTI First Floor",
@@ -2186,16 +2207,21 @@
         weather_high: 22,
         weather_low: 11,
         wind_speed: 1,
-        offline: false
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     },
     good_air: {
       name: "Clean Alpine Air (In: 18 Good, Out: 32 Good)",
       devices: [
-        { device_id: "6699", device_name: "KNMA", offline: false }
+        { device_id: "6699", device_name: "KNMA", offline: false },
+        { device_id: "6851", device_name: "Agoda", offline: false },
+        { device_id: "6871", device_name: "Scope Minar", offline: false },
+        { device_id: "7701", device_name: "Corporate Boardroom", offline: false },
+        { device_id: "7702", device_name: "Executive Suite", offline: false },
+        { device_id: "7703", device_name: "Cafeteria Hub", offline: false }
       ],
-      cards: ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
-      indoor_aqi_enabled: true,
+      cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"],
       payload: {
         device_id: "6699",
         indoor_device_name: "PTI First Floor",
@@ -2215,7 +2241,8 @@
         weather_high: 25,
         weather_low: 15,
         wind_speed: 7,
-        offline: false
+        offline: false,
+        cards: ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
       }
     }
   };
@@ -2227,13 +2254,12 @@
     // Manage test mode status: default reverts to live polling; non-default pauses auto-sync
     window.isCockpitTestMode = (name !== "default");
 
-    // Set admin flag
-    window.indoor_aqi_enabled = (tc.indoor_aqi_enabled !== false);
-    window.isIndoorAqiDisabled = (tc.indoor_aqi_enabled === false);
-
     // Set cards & re-render tubes
     if (Array.isArray(tc.cards)) {
       window.cards = tc.cards.slice();
+      if (tc.payload) {
+        tc.payload.cards = tc.cards.slice();
+      }
     }
     renderTubes(window.cards, tc.payload);
 
@@ -2328,7 +2354,10 @@
 
     const tDis = document.getElementById("toggleIndoorAqiDisabled");
     if (tDis) {
-      tDis.checked = (window.indoor_aqi_enabled === false || window.isIndoorAqiDisabled === true);
+      const activeCards = (currentSensorData && Array.isArray(currentSensorData.cards))
+        ? currentSensorData.cards
+        : (Array.isArray(window.cards) ? window.cards : DEFAULT_CARDS);
+      tDis.checked = !activeCards.some((c) => String(c).trim().toUpperCase() === "AQI");
     }
 
     const tOff = document.getElementById("toggleOffline");
@@ -2415,9 +2444,21 @@
     if (toggleDisabled) {
       toggleDisabled.addEventListener("change", (e) => {
         window.isCockpitTestMode = true;
-        window.indoor_aqi_enabled = !e.target.checked;
-        window.isIndoorAqiDisabled = e.target.checked;
+        const shouldDisableAqi = e.target.checked;
+        let cList = (Array.isArray(window.cards) && window.cards.length > 0)
+          ? window.cards.slice()
+          : DEFAULT_CARDS.slice();
+
+        if (shouldDisableAqi) {
+          cList = cList.filter((c) => String(c).trim().toUpperCase() !== "AQI");
+        } else {
+          if (!cList.some((c) => String(c).trim().toUpperCase() === "AQI")) {
+            cList.unshift("AQI");
+          }
+        }
+        window.cards = cList;
         if (currentSensorData) {
+          currentSensorData.cards = cList.slice();
           ingestSensorPayload(currentSensorData);
         }
       });
@@ -2427,8 +2468,10 @@
     if (toggleTen) {
       toggleTen.addEventListener("change", (e) => {
         window.isCockpitTestMode = true;
+        const hasAqi = Array.isArray(window.cards) && window.cards.some((c) => String(c).trim().toUpperCase() === "AQI");
+        const aqiPrefix = hasAqi ? ["AQI"] : [];
         if (e.target.checked) {
-          window.cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"];
+          window.cards = aqiPrefix.concat(["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]);
           if (currentSensorData) {
             currentSensorData.hcho = currentSensorData.hcho || 0.03;
             currentSensorData.ozone = currentSensorData.ozone || 28;
@@ -2436,7 +2479,10 @@
             currentSensorData.co = currentSensorData.co || 0.6;
           }
         } else {
-          window.cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"];
+          window.cards = aqiPrefix.concat(["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]);
+        }
+        if (currentSensorData) {
+          currentSensorData.cards = window.cards.slice();
         }
         renderTubes(window.cards, currentSensorData);
         if (currentSensorData) ingestSensorPayload(currentSensorData);

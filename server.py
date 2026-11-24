@@ -38,13 +38,17 @@ INITIAL_SENSOR_DATA = {
     "weather_low": 13,
     "wind_speed": 4,
     "offline": False,
-    "device_status": "online"
+    "device_status": "online",
+    "cards": ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
 }
 
 DEVICES = [
     {"device_id": "6699", "device_name": "KNMA", "offline": True},
     {"device_id": "6851", "device_name": "Agoda", "offline": False},
     {"device_id": "6871", "device_name": "Scope Minar", "offline": False},
+    {"device_id": "7701", "device_name": "Corporate Boardroom", "offline": False},
+    {"device_id": "7702", "device_name": "Executive Suite", "offline": False},
+    {"device_id": "7703", "device_name": "Cafeteria Hub", "offline": False},
 ]
 
 def render_dashboard_html(test_case=None):
@@ -77,10 +81,10 @@ def render_dashboard_html(test_case=None):
     html = re.sub(r'\{\{\s*request\.user\.username[^}]*\}\}', 'Admin User', html)
 
     # Test cases data configuration
-    current_cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
+    current_cards = ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
     current_devices = list(DEVICES)
     current_sensor = dict(INITIAL_SENSOR_DATA)
-    indoor_aqi_enabled = True
+    current_sensor["cards"] = list(current_cards)
 
     if test_case == "single_monitor":
         current_devices = [{"device_id": "7701", "device_name": "Corporate Boardroom", "offline": False}]
@@ -95,11 +99,11 @@ def render_dashboard_html(test_case=None):
             "weather_condition": "Clear Sky"
         })
     elif test_case == "indoor_disabled_gt_outdoor":
-        indoor_aqi_enabled = False
+        current_cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
         current_sensor.update({
             "aqi": 210, "pm2d5": 120.0, "pm10": 175.0,
             "outdoor_aqi": 75, "outdoor_pm2_5": 35.0, "outdoor_pm10": 60.0,
-            "device_settings": {"indoor_aqi": False, "show_indoor_aqi": False}
+            "cards": list(current_cards)
         })
     elif test_case == "good_air":
         current_sensor.update({
@@ -107,19 +111,21 @@ def render_dashboard_html(test_case=None):
             "outdoor_aqi": 32, "outdoor_pm2_5": 14.0, "outdoor_pm10": 22.0
         })
     elif test_case == "multiple_tubes":
-        current_cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
+        current_cards = ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
         current_sensor.update({
-            "hcho": 0.03, "ozone": 28, "no2": 19, "co": 0.6
+            "hcho": 0.03, "ozone": 28, "no2": 19, "co": 0.6,
+            "cards": list(current_cards)
         })
     elif test_case == "indoor_aqi_disabled":
-        indoor_aqi_enabled = False
-        current_sensor["device_settings"] = {"indoor_aqi": False, "show_indoor_aqi": False}
+        current_cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"]
+        current_sensor["cards"] = list(current_cards)
     elif test_case == "single_monitor_multiple_tubes":
         current_devices = [{"device_id": "9901", "device_name": "Executive Suite", "offline": False}]
-        current_cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
+        current_cards = ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]
         current_sensor.update({
             "device_id": "9901", "indoor_device_name": "Executive Suite",
-            "hcho": 0.02, "ozone": 22, "no2": 15, "co": 0.4
+            "hcho": 0.02, "ozone": 22, "no2": 15, "co": 0.4,
+            "cards": list(current_cards)
         })
     elif test_case == "offline":
         current_devices = [{"device_id": "6699", "device_name": "KNMA", "offline": True}]
@@ -139,13 +145,6 @@ def render_dashboard_html(test_case=None):
     html = re.sub(
         r"{%\s*if\s+device_settings\s+and\s+device_settings\.cards\s*%}[\s\S]*?{%\s*else\s*%}[\s\S]*?{%\s*endif\s*%}",
         cards_replacement,
-        html
-    )
-
-    admin_flag_replacement = "false" if not indoor_aqi_enabled else "true"
-    html = re.sub(
-        r"{%\s*if\s+device_settings\s+and\s+device_settings\.indoor_aqi[\s\S]*?{%\s*endif\s*%}",
-        admin_flag_replacement,
         html
     )
 
@@ -223,9 +222,9 @@ class CleanAirCockpitHandler(http.server.BaseHTTPRequestHandler):
 
         if path in ("/test-cases", "/api/test-cases"):
             test_info = [
-                {"id": "default", "name": "Default Baseline (3 Monitors, 6 Tubes, Indoor AQI 41, Outdoor AQI 294)", "url": "/?test=default"},
+                {"id": "default", "name": "Default Baseline (6 Monitors, 6 Tubes, Indoor AQI 41, Outdoor AQI 294)", "url": "/?test=default"},
                 {"id": "indoor_gt_outdoor", "name": "Indoor AQI > Outdoor AQI (In: 210 vs Out: 55 -> Reduction Box Disappears)", "url": "/?test=indoor_gt_outdoor"},
-                {"id": "indoor_aqi_disabled", "name": "Indoor AQI Disabled at Django Admin Side (Panel 1 shows Indoor PM2.5)", "url": "/?test=indoor_aqi_disabled"},
+                {"id": "indoor_aqi_disabled", "name": "Indoor AQI Disabled via cards Parameter (Panel 1 shows Indoor PM2.5)", "url": "/?test=indoor_aqi_disabled"},
                 {"id": "indoor_disabled_gt_outdoor", "name": "Indoor Disabled & PM2.5 High (In: 120 vs Out: 35 -> Reduction Disappears)", "url": "/?test=indoor_disabled_gt_outdoor"},
                 {"id": "single_monitor", "name": "Single Monitor (1 Monitor in Active Monitors card)", "url": "/?test=single_monitor"},
                 {"id": "multiple_tubes", "name": "Multiple Test Tubes (10 Dynamic Air Elements)", "url": "/?test=multiple_tubes"},

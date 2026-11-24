@@ -315,6 +315,7 @@
    */
   window.cards = window.cards || [];
   {% if device_settings and device_settings.cards %}
+  {% if 'AQI' in device_settings.cards %} window.cards.push('AQI'); {% endif %}
   {% if 'pm2d5' in device_settings.cards %} window.cards.push('pm2d5'); {% endif %}
   {% if 'pm10' in device_settings.cards %} window.cards.push('pm10'); {% endif %}
   {% if 'tvoc' in device_settings.cards %} window.cards.push('tvoc'); {% endif %}
@@ -328,15 +329,8 @@
   {% if 'NO2' in device_settings.cards %} window.cards.push('no2'); {% endif %}
   {% if 'CO' in device_settings.cards %} window.cards.push('co'); {% endif %}
   {% else %}
-  window.cards = ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp"];
+  window.cards = ["AQI", "pm2d5", "pm10", "co2", "tvoc", "rh", "temp"];
   {% endif %}
-
-  /**
-   * Indoor AQI Enablement Setting (Controlled from Django Admin Side)
-   * If indoor_aqi is set to False in device_settings / admin, the cockpit dynamically
-   * displays "Indoor PM2.5" with its value, condition, and color in Panel 1 instead.
-   */
-  window.indoor_aqi_enabled = {% if device_settings and device_settings.indoor_aqi == False or device_settings.show_aqi == False or device_settings.show_indoor_aqi == False or device_settings.aqi_enabled == False %}false{% else %}true{% endif %};
 
   var device_list = [];
 

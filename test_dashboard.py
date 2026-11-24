@@ -42,8 +42,8 @@ def run_tests():
     print("\n[1] Testing Default Baseline View (test=default)")
     html = server.render_dashboard_html(test_case="default")
     assert_test("Default has 6 test tube cards", '"pm2d5", "pm10", "co2", "tvoc", "rh", "temp"' in html)
-    assert_test("Default has 3 devices in list", html.count("device_list.push") == 3)
-    assert_test("Default has indoor AQI enabled", "window.indoor_aqi_enabled = true;" in html)
+    assert_test("Default has 6 devices in list", html.count("device_list.push") == 6)
+    assert_test("Default has AQI in cards", '"AQI"' in html)
 
     # Test 2: Single Monitor Test Case
     print("\n[2] Testing Single Monitor View (test=single_monitor)")
@@ -63,10 +63,10 @@ def run_tests():
     html = server.render_dashboard_html(test_case="multiple_tubes")
     assert_test("Multiple Tubes has all 10 air elements", all(tube in html for tube in ["pm2d5", "pm10", "co2", "tvoc", "rh", "temp", "hcho", "ozone", "no2", "co"]))
 
-    # Test 4: Indoor AQI Disabled at Django Admin Side
-    print("\n[4] Testing Indoor AQI Disabled at Django Admin Side (test=indoor_aqi_disabled)")
+    # Test 4: Indoor AQI Disabled via cards Parameter
+    print("\n[4] Testing Indoor AQI Disabled via cards Parameter (test=indoor_aqi_disabled)")
     html = server.render_dashboard_html(test_case="indoor_aqi_disabled")
-    assert_test("indoor_aqi_enabled flag is false", "window.indoor_aqi_enabled = false;" in html)
+    assert_test("AQI is omitted from cards for indoor_aqi_disabled", '"AQI"' not in html.split('id="cockpit-cards"')[1].split('</script>')[0])
 
     # Test 5: Indoor AQI > Outdoor AQI
     print("\n[5] Testing Indoor AQI > Outdoor AQI (test=indoor_gt_outdoor)")
@@ -76,7 +76,7 @@ def run_tests():
     # Test 6: Indoor AQI Disabled & PM2.5 > Outdoor PM2.5
     print("\n[6] Testing Indoor AQI Disabled & PM2.5 > Outdoor (test=indoor_disabled_gt_outdoor)")
     html = server.render_dashboard_html(test_case="indoor_disabled_gt_outdoor")
-    assert_test("Indoor AQI disabled flag is false", "window.indoor_aqi_enabled = false;" in html)
+    assert_test("AQI is omitted from cards for indoor_disabled_gt_outdoor", '"AQI"' not in html.split('id="cockpit-cards"')[1].split('</script>')[0])
     assert_test("Indoor PM2.5 120 is higher than Outdoor PM2.5 35", '"pm2d5": 120.0' in html and '"outdoor_pm2_5": 35.0' in html)
 
     # Test 7: Single Monitor + Multiple Tubes
@@ -142,7 +142,7 @@ def run_tests():
     assert_test("No deleted waterfall residual in js", "waterfall" not in js.lower())
     assert_test("Indoor landscapes array starts with mountain-1", 'id: "mountain-1"' in js and 'assets/mountain_1.png' in js)
     assert_test("has-single-monitor toggling in updateMascotVisibility", "has-single-monitor" in js)
-    assert_test("isIndoorAqiDisabled logic implemented", "isIndoorAqiDisabled" in js)
+    assert_test("isIndoorAqiDisabled logic implemented based on cards AQI presence", "isIndoorAqiDisabled" in js and "hasAqiCard" in js)
     assert_test("showIndoorPm25Instead switches to Indoor PM2.5", 'indoorTitleEl.textContent = "Indoor PM2.5"' in js)
     assert_test("CockpitTesting API exposed globally", "window.CockpitTesting" in js)
     assert_test("URL test parameter auto-handling included", "checkUrlTestParam" in js)
