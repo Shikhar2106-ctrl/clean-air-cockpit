@@ -53,7 +53,7 @@ sequenceDiagram
     Ingest->>Mascot: updateMascotVisibility()
     Mascot->>Mascot: Verify Active Monitor Count (Single <= 1)
     Mascot->>DOM: Activate Sprout (leaf_mascot.png) & Eco Bulb Loop (6s)
-    Sync->>Sync: scheduleNextSync(25000ms via setTimeout)
+    Sync->>Sync: scheduleNextSync(50000ms via setTimeout)
 ```
 
 ### Global State Variable Registry
@@ -145,7 +145,7 @@ function getRealTimeData(force?: boolean): void;
     applySyncedData(data);
   }
   ```
-* **Non-Stacking Polling**: Always schedules next tick in `.finally()` via `setTimeout(..., 25000)`.
+* **Non-Stacking Polling**: Always schedules next tick in `.finally()` via `setTimeout(..., 50000)`.
 
 ---
 

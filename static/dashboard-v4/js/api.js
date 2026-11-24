@@ -333,7 +333,7 @@
   // =========================================================================
   // 2. Continuous Telemetry Synchronization Engine (/get-real-time-data/<id>/)
   // =========================================================================
-  const SYNC_INTERVAL_MS = 25000; // 25 seconds standard continuous sync
+  const SYNC_INTERVAL_MS = 50000; // 50 seconds standard continuous sync
   let syncTimer = null;
   let isSyncInProgress = false;
   let currentAbortController = null;
@@ -691,7 +691,7 @@
   let pollingIntervalId = null;
   let activeWebSocket = null;
 
-  function startRealtimePolling(url, intervalMs = 25000) {
+  function startRealtimePolling(url, intervalMs = 50000) {
     stopRealtimePolling();
     const poll = async () => {
       try {

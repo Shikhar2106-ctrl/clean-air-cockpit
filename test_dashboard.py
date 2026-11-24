@@ -208,6 +208,7 @@ def run_tests():
     print("\n[16] Testing Device Status Off Handling")
     assert_test("script.js detects device_status Off/offline", "device_status" in script_js and "isDeviceOffStatus" in script_js)
     assert_test("api.js normalizes device_status Off to offline", "device_status" in api_js and "p.offline = true" in api_js)
+    assert_test("Polling interval configured to 50 seconds (50000ms)", "SYNC_INTERVAL_MS = 50000" in api_js and "intervalMs = 50000" in api_js)
 
     print("\n" + "=" * 70)
     print(f"🏁 TEST SUMMARY: {passed}/{total} Passed ({'100%' if passed == total else 'FAIL'})")

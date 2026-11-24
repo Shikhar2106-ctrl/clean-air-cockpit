@@ -1668,7 +1668,7 @@
   }
 
   // --- Real-Time Polling & WebSocket Handlers ---
-  function startRealtimePolling(url, intervalMs = 25000) {
+  function startRealtimePolling(url, intervalMs = 50000) {
     if (window.CockpitAPI && typeof window.CockpitAPI.startRealtimePolling === "function") {
       return window.CockpitAPI.startRealtimePolling(url, intervalMs);
     }
