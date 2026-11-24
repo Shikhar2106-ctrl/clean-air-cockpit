@@ -127,8 +127,16 @@ def run_tests():
         assert_test(f"Asset {asset_name} exists", os.path.isfile(asset_file))
 
     # Test 12: JavaScript Logic, Sliders & Test Dock Engine
-    print("\n[12] Testing JavaScript Client Script")
+    print("\n[12] Testing JavaScript Client Script & Modular Architecture")
     js = read_static("dashboard-v4/js/script.js")
+    api_js = read_static("dashboard-v4/js/api.js")
+    assert_test("Dedicated api.js file exists and is populated", len(api_js) > 5000)
+    assert_test("api.js contains CPCB parameter registry", "PARAM_REGISTRY" in api_js)
+    assert_test("api.js contains WeatherService implementation", "WeatherService" in api_js and "open-meteo.com" in api_js)
+    assert_test("api.js contains real-time data sync engine", "getRealTimeData" in api_js and "scheduleNextSync" in api_js)
+    assert_test("api.js exports window.CockpitAPI", "window.CockpitAPI" in api_js)
+    assert_test("base.html loads api.js before script.js", "dashboard-v4/js/api.js" in read_template("base.html"))
+
     assert_test("No deleted waterfall residual in js", "waterfall" not in js.lower())
     assert_test("Indoor landscapes array starts with mountain-1", 'id: "mountain-1"' in js and 'assets/mountain_1.png' in js)
     assert_test("has-single-monitor toggling in updateMascotVisibility", "has-single-monitor" in js)
@@ -156,9 +164,18 @@ def run_tests():
     css = read_static("dashboard-v4/css/style.css")
     assert_test("Tube size decreased to 1.6rem width and 6.75rem height", "max-width: 1.6rem;" in css and "height: 6.75rem;" in css)
 
-    # Verify clean_air_cockpit_delivery.zip is preserved
+    # Verify clean_air_cockpit_delivery.zip is preserved & contains modular api.js
     zip_path = os.path.join(BASE_DIR, "clean_air_cockpit_delivery.zip")
     assert_test("clean_air_cockpit_delivery.zip remains intact", os.path.isfile(zip_path))
+    if os.path.isfile(zip_path):
+        import zipfile
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zip_names = zf.namelist()
+            assert_test("ZIP contains static/dashboard-v4/js/api.js", "static/dashboard-v4/js/api.js" in zip_names)
+            assert_test("ZIP does NOT contain diagnostics-modal.js", not any("diagnostics" in n.lower() for n in zip_names))
+            zip_text = "".join(zf.read(n).decode("utf-8", errors="ignore") for n in zip_names if n.endswith((".html", ".js", ".css")))
+            assert_test("ZIP contains ZERO references to IntelliGreenMonitorDB", "IntelliGreenMonitorDB" not in zip_text)
+            assert_test("ZIP contains ZERO references to dockBtnDiagnostics", "dockBtnDiagnostics" not in zip_text)
 
     print("\n" + "=" * 70)
     print(f"🏁 TEST SUMMARY: {passed}/{total} Passed ({'100%' if passed == total else 'FAIL'})")

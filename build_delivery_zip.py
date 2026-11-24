@@ -51,6 +51,7 @@ def create_delivery_zip():
     base_html_path = os.path.join(BASE_DIR, "templates", "dashboard-v4", "base.html")
     index_html_path = os.path.join(BASE_DIR, "templates", "dashboard-v4", "index.html")
     style_css_path = os.path.join(BASE_DIR, "static", "dashboard-v4", "css", "style.css")
+    api_js_path = os.path.join(BASE_DIR, "static", "dashboard-v4", "js", "api.js")
     script_js_path = os.path.join(BASE_DIR, "static", "dashboard-v4", "js", "script.js")
     jquery_js_path = os.path.join(BASE_DIR, "static", "dashboard-v4", "js", "jquery-3.3.1.min.js")
     assets_dir = os.path.join(BASE_DIR, "static", "dashboard-v4", "assets")
@@ -61,6 +62,8 @@ def create_delivery_zip():
         raw_index_html = f.read()
     with open(style_css_path, "r", encoding="utf-8") as f:
         raw_style_css = f.read()
+    with open(api_js_path, "r", encoding="utf-8") as f:
+        raw_api_js = f.read()
     with open(script_js_path, "r", encoding="utf-8") as f:
         raw_script_js = f.read()
 
@@ -80,8 +83,9 @@ def create_delivery_zip():
         zf.writestr("templates/dashboard-v4/base.html", prod_base_html)
         zf.writestr("templates/dashboard-v4/index.html", raw_index_html)
         
-        # Static CSS & JS
+        # Static CSS & JS (Modular Architecture: API & UI separated)
         zf.writestr("static/dashboard-v4/css/style.css", prod_style_css)
+        zf.writestr("static/dashboard-v4/js/api.js", raw_api_js)
         zf.writestr("static/dashboard-v4/js/script.js", prod_script_js)
         
         if os.path.isfile(jquery_js_path):

@@ -7,9 +7,13 @@
 ## 1. Executive Summary
 This package contains the complete, production-ready frontend template and static asset bundle for the **IntelliGreen Clean Air Cockpit**. All files are structured according to standard Django application layouts:
 - `templates/dashboard-v4/` (`base.html`, `index.html`)
-- `static/dashboard-v4/` (`css/style.css`, `js/script.js`, `js/jquery-3.3.1.min.js`, `assets/`)
+- `static/dashboard-v4/` (`css/style.css`, `js/api.js`, `js/script.js`, `js/jquery-3.3.1.min.js`, `assets/`)
 
-Zero testing docks, test sliders, or debug mock bars exist in this deliverable. It is 100% clean production code ready for backend deployment.
+### Modular JavaScript Architecture:
+- **`api.js` (Data & Networking Layer)**: Manages CPCB / EPA parameter registries and thresholds, real-time 25-second telemetry synchronization (`/get-real-time-data/<id>/`), Open-Meteo & reverse geocoding weather services (`WeatherService`), WebSocket handlers, and race-condition request cancellation (`AbortController`).
+- **`script.js` (UI Presentation Layer)**: Manages DOM rendering, tube charts, theme switching (Dark/Light), layout adaptations (Single Monitor Sprout/Bulb vs multi-monitor list), drawer controls, and Smart TV responsive scaling.
+
+Zero testing docks, test sliders, revoked diagnostics tables, or debug mock bars exist in this deliverable. It is 100% clean production code ready for backend deployment.
 
 ---
 
