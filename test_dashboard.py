@@ -115,6 +115,8 @@ def run_tests():
     assert_test("Leaf mascot proportional size constraint", ".leaf-mascot-img" in css and "max-width: 8.5rem;" in css)
     assert_test("Eco bulb proportional size constraint", ".eco-bulb-img" in css and "max-width: 4.85rem;" in css)
     assert_test("Single monitor container adjustment rule", ".corporate-locations.has-single-monitor" in css)
+    assert_test("Tablet active monitor list scroll rule present", "max-height: 14.5rem !important;" in css and "-webkit-overflow-scrolling: touch" in css)
+    assert_test("Phone active monitor list scroll rule present", "max-height: 13.5rem !important;" in css)
     assert_test("Dark mode active monitors site name is white", '[data-theme="dark"] .corporate-location-name strong' in css and 'color: #ffffff' in css)
     assert_test("No deleted waterfall residual in css", "waterfall" not in css.lower())
 

@@ -1785,6 +1785,18 @@ body:not(.mode-landscape-tv) .corporate-locations.has-single-monitor .tile-masco
     min-height: 18.0rem !important;
   }
 
+  /* Active Monitors Internal Scrolling on Tablet */
+  body:not(.mode-landscape-tv) .corporate-locations:not(.has-single-monitor) {
+    max-height: 20.0rem !important;
+  }
+
+  body:not(.mode-landscape-tv) .corporate-locations:not(.has-single-monitor) .corporate-location-list {
+    max-height: 14.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
+  }
+
   body:not(.mode-landscape-tv) .corporate-weather-wind {
     grid-column: 1 / -1 !important;
     min-height: 14.0rem !important;
@@ -1877,6 +1889,14 @@ body:not(.mode-landscape-tv) .corporate-locations.has-single-monitor .tile-masco
     grid-column: 1 / -1 !important;
     min-height: auto !important;
     padding: 1.0rem 1.25rem !important;
+  }
+
+  /* Active Monitors Internal Scrolling on Phone */
+  body:not(.mode-landscape-tv) .corporate-locations:not(.has-single-monitor) .corporate-location-list {
+    max-height: 13.5rem !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    touch-action: pan-y !important;
   }
 
   body:not(.mode-landscape-tv) .corporate-indoor .corporate-main-value {
@@ -2124,6 +2144,10 @@ body[data-theme="dark"] {
 
 [data-theme="dark"] .corporate-location-list {
   background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .corporate-location-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 [data-theme="dark"] .corporate-location {
