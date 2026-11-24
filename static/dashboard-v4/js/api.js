@@ -323,6 +323,10 @@
     p.outdoor_pm2_5 = parseFloat(p.outdoor_pm2d5 !== undefined ? p.outdoor_pm2d5 : p.outdoor_pm2_5) || 0;
     p.outdoor_pm2d5 = p.outdoor_pm2_5;
 
+    if (p.device_status && ["off", "offline"].includes(String(p.device_status).toLowerCase())) {
+      p.offline = true;
+    }
+
     return p;
   }
 

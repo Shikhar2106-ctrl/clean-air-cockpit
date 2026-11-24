@@ -204,6 +204,11 @@ def run_tests():
     assert_test("script.js exports window.CockpitLandscape controller", "window.CockpitLandscape" in script_js)
     assert_test("resolveAssetUrl provides multi-tier link/script/img fallback", "styleLink" in script_js and "scriptTag" in script_js and "refImgs" in script_js)
 
+    # Test 16: Device Status Off Payload Handling
+    print("\n[16] Testing Device Status Off Handling")
+    assert_test("script.js detects device_status Off/offline", "device_status" in script_js and "isDeviceOffStatus" in script_js)
+    assert_test("api.js normalizes device_status Off to offline", "device_status" in api_js and "p.offline = true" in api_js)
+
     print("\n" + "=" * 70)
     print(f"🏁 TEST SUMMARY: {passed}/{total} Passed ({'100%' if passed == total else 'FAIL'})")
     print("=" * 70)

@@ -878,7 +878,10 @@
 
     // Update bar height, background color, and values via validateParam
     const isContextOffline = Boolean(
-      (dataContext && (dataContext.offline === true && !dataContext.hasLiveStats))
+      dataContext && (
+        (dataContext.device_status && ["off", "offline"].includes(String(dataContext.device_status).toLowerCase())) ||
+        dataContext.offline === true
+      )
     );
 
     resolvedParams.forEach((def) => {
@@ -1255,6 +1258,11 @@
     p.outdoor_aqi = parseFloat(p.outdoor_aqi) || 0;
     p.outdoor_pm2_5 = parseFloat(p.outdoor_pm2d5 !== undefined ? p.outdoor_pm2d5 : p.outdoor_pm2_5) || 0;
     p.outdoor_pm2d5 = p.outdoor_pm2_5;
+
+    if (p.device_status && ["off", "offline"].includes(String(p.device_status).toLowerCase())) {
+      p.offline = true;
+    }
+
     return p;
   }
 
@@ -1280,18 +1288,19 @@
     }
 
     // Determine Offline Status:
-    // Only zero out displays when explicitly offline AND no live stats exist
+    // Device is offline if device_status is Off/Offline, or explicitly flagged offline
+    const isDeviceOffStatus = Boolean(
+      (payload.offline === true) ||
+      (payload.device_status && ["off", "offline"].includes(String(payload.device_status).toLowerCase()))
+    );
+
     let isDeviceOffline = false;
     let offlineReason = "";
 
-    if (payload.offline === true && !payload.hasLiveStats) {
+    if (isDeviceOffStatus || (payload.offline === true && !payload.hasLiveStats)) {
       isDeviceOffline = true;
       offlineReason = "Device Offline";
     }
-
-    // Synchronize offline status with devices in allDevices list (for indicator dot)
-    const isDeviceOffStatus = (payload.offline === true) ||
-      (payload.device_status && ["off", "offline"].includes(String(payload.device_status).toLowerCase()));
 
     if (devId && Array.isArray(allDevices)) {
       const devObj = allDevices.find((d) => String(d.device_id) === String(devId));
