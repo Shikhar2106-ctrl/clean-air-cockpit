@@ -614,7 +614,7 @@
           return match[1] + url;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     // 2. Detect from loaded script.js script tag
     try {
       const scriptTag = document.querySelector('script[src*="script.js"]');
@@ -624,7 +624,7 @@
           return match[1] + url;
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     // 3. Detect from reference images in the DOM
     try {
       const refImgs = document.querySelectorAll('img[src*="/assets/"]');
@@ -635,7 +635,7 @@
           return basePath + url.replace(/^assets\//, "");
         }
       }
-    } catch (_) {}
+    } catch (_) { }
     // 4. Default standard Django static location
     if (typeof window !== "undefined" && window.location && window.location.origin) {
       return window.location.origin + "/static/dashboard-v4/" + url;
@@ -649,7 +649,7 @@
         const img = new Image();
         const resolved = resolveAssetUrl(item.url);
         if (resolved) img.src = resolved;
-      } catch (_) {}
+      } catch (_) { }
     });
   }
 
@@ -1469,31 +1469,47 @@
         outdoorReductionBox.style.setProperty("display", "none", "important");
         outdoorReductionBox.classList.add("is-hidden");
       } else if (effectiveHasIndoorAqi && !isNaN(outNum) && !isNaN(inNum) && outNum > 0 && inNum > 0 && inNum < outNum) {
-        // Condition 1: When Indoor AQI is available and strictly less than Outdoor AQI
+        // Condition 1: Indoor AQI Available
         const aqiReductionPct = Math.round(((outNum - inNum) / outNum) * 100);
         const aqiDiff = Math.round(outNum - inNum);
-        if (outdoorAqiReductionValEl) {
-          outdoorAqiReductionValEl.textContent = `${aqiReductionPct}%`;
-          outdoorAqiReductionValEl.setAttribute(
-            "title",
-            `Outdoor AQI: ${Math.round(outNum)} → Indoor AQI: ${Math.round(inNum)} (${aqiDiff} pts cleaner indoor)`
-          );
+
+        // 🌟 AQI Check: Sirf tabhi card dikhayein jab reduction strictly 0 se badi ho (> 0)
+        if (aqiReductionPct > 0) {
+          if (outdoorAqiReductionValEl) {
+            outdoorAqiReductionValEl.textContent = `${aqiReductionPct}%`;
+            outdoorAqiReductionValEl.setAttribute(
+              "title",
+              `Outdoor AQI: ${Math.round(outNum)} → Indoor AQI: ${Math.round(inNum)} (${aqiDiff} pts cleaner indoor)`
+            );
+          }
+          outdoorReductionBox.style.setProperty("display", "flex", "important");
+          outdoorReductionBox.classList.remove("is-hidden");
+        } else {
+          // Zero ya negative hone par card screen se gayab (hide) ho jayega
+          outdoorReductionBox.style.setProperty("display", "none", "important");
+          outdoorReductionBox.classList.add("is-hidden");
         }
-        outdoorReductionBox.style.setProperty("display", "flex", "important");
-        outdoorReductionBox.classList.remove("is-hidden");
       } else if (!effectiveHasIndoorAqi && hasIndoorPm25 && outdoorPm25Val > 0 && pm25Val > 0 && pm25Val < outdoorPm25Val) {
-        // Condition 2: Fallback when Indoor AQI is absent or disabled but PM2.5 is cleaner indoor than outdoor
+        // Condition 2: PM2.5 Fallback
         const pmDiff = (outdoorPm25Val - pm25Val).toFixed(1);
         const pmReductionPct = Math.round(((outdoorPm25Val - pm25Val) / outdoorPm25Val) * 100);
-        if (outdoorAqiReductionValEl) {
-          outdoorAqiReductionValEl.textContent = `${pmReductionPct}%`;
-          outdoorAqiReductionValEl.setAttribute(
-            "title",
-            `Outdoor PM2.5: ${outdoorPm25Val} → Indoor PM2.5: ${pm25Val} (${pmDiff} µg/m³ cleaner indoor)`
-          );
+
+        // 🌟 PM2.5 Check: Sirf tabhi card dikhayein jab reduction strictly 0 se badi ho (> 0)
+        if (pmReductionPct > 0) {
+          if (outdoorAqiReductionValEl) {
+            outdoorAqiReductionValEl.textContent = `${pmReductionPct}%`;
+            outdoorAqiReductionValEl.setAttribute(
+              "title",
+              `Outdoor PM2.5: ${outdoorPm25Val} → Indoor PM2.5: ${pm25Val} (${pmDiff} µg/m³ cleaner indoor)`
+            );
+          }
+          outdoorReductionBox.style.setProperty("display", "flex", "important");
+          outdoorReductionBox.classList.remove("is-hidden");
+        } else {
+          // Zero ya negative hone par card screen se gayab (hide) ho jayega
+          outdoorReductionBox.style.setProperty("display", "none", "important");
+          outdoorReductionBox.classList.add("is-hidden");
         }
-        outdoorReductionBox.style.setProperty("display", "flex", "important");
-        outdoorReductionBox.classList.remove("is-hidden");
       } else {
         // If Indoor >= Outdoor, disappear the reduction card
         outdoorReductionBox.style.setProperty("display", "none", "important");
@@ -1538,8 +1554,8 @@
     renderDynamicTubes(getActiveCards(), payload);
 
     // 7. Outdoor Card AQI Reduction Pill (Panel 2)
-    const aqiRed = reductionPct(outdoorAqiVal, indoorAqiVal);
-    if (aqiReductionEl) aqiReductionEl.textContent = `${aqiRed}%`;
+    // const aqiRed = reductionPct(outdoorAqiVal, indoorAqiVal);
+    // if (aqiReductionEl) aqiReductionEl.textContent = `${aqiRed}%`;
   }
 
   // --- Dark / Light Theme System ---
