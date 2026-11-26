@@ -1465,15 +1465,16 @@
     const inNum = parseFloat(indoorAqiVal);
 
     if (outdoorReductionBox) {
-      if (isDeviceOffline) {
+      // 1. Agar device offline ho ya Indoor AQI card disabled ho / cards me na ho, to reduction card hide rahega
+      if (isDeviceOffline || !effectiveHasIndoorAqi) {
         outdoorReductionBox.style.setProperty("display", "none", "important");
         outdoorReductionBox.classList.add("is-hidden");
-      } else if (effectiveHasIndoorAqi && !isNaN(outNum) && !isNaN(inNum) && outNum > 0 && inNum > 0 && inNum < outNum) {
-        // Condition 1: Indoor AQI Available
+      } else if (!isNaN(outNum) && !isNaN(inNum) && outNum > 0 && inNum > 0 && inNum < outNum) {
+        // 2. Indoor AQI Available & Cards me Enabled: Reduction Calculate karein
         const aqiReductionPct = Math.round(((outNum - inNum) / outNum) * 100);
         const aqiDiff = Math.round(outNum - inNum);
 
-        // 🌟 AQI Check: Sirf tabhi card dikhayein jab reduction strictly 0 se badi ho (> 0)
+        // Sirf tabhi dikhayein jab reduction strictly 0 se badi ho (> 0%)
         if (aqiReductionPct > 0) {
           if (outdoorAqiReductionValEl) {
             outdoorAqiReductionValEl.textContent = `${aqiReductionPct}%`;
@@ -1485,33 +1486,12 @@
           outdoorReductionBox.style.setProperty("display", "flex", "important");
           outdoorReductionBox.classList.remove("is-hidden");
         } else {
-          // Zero ya negative hone par card screen se gayab (hide) ho jayega
-          outdoorReductionBox.style.setProperty("display", "none", "important");
-          outdoorReductionBox.classList.add("is-hidden");
-        }
-      } else if (!effectiveHasIndoorAqi && hasIndoorPm25 && outdoorPm25Val > 0 && pm25Val > 0 && pm25Val < outdoorPm25Val) {
-        // Condition 2: PM2.5 Fallback
-        const pmDiff = (outdoorPm25Val - pm25Val).toFixed(1);
-        const pmReductionPct = Math.round(((outdoorPm25Val - pm25Val) / outdoorPm25Val) * 100);
-
-        // 🌟 PM2.5 Check: Sirf tabhi card dikhayein jab reduction strictly 0 se badi ho (> 0)
-        if (pmReductionPct > 0) {
-          if (outdoorAqiReductionValEl) {
-            outdoorAqiReductionValEl.textContent = `${pmReductionPct}%`;
-            outdoorAqiReductionValEl.setAttribute(
-              "title",
-              `Outdoor PM2.5: ${outdoorPm25Val} → Indoor PM2.5: ${pm25Val} (${pmDiff} µg/m³ cleaner indoor)`
-            );
-          }
-          outdoorReductionBox.style.setProperty("display", "flex", "important");
-          outdoorReductionBox.classList.remove("is-hidden");
-        } else {
-          // Zero ya negative hone par card screen se gayab (hide) ho jayega
+          // 0% ya negative hone par hide
           outdoorReductionBox.style.setProperty("display", "none", "important");
           outdoorReductionBox.classList.add("is-hidden");
         }
       } else {
-        // If Indoor >= Outdoor, disappear the reduction card
+        // Agar Indoor AQI >= Outdoor AQI ho, tab bhi hide rahega
         outdoorReductionBox.style.setProperty("display", "none", "important");
         outdoorReductionBox.classList.add("is-hidden");
       }
