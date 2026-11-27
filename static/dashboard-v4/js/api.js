@@ -298,7 +298,31 @@
       p.virus_index = pickFloat("virus_index", "virus_index");
       p.air_pressure = pickFloat("air_pressure", "air_pressure");
       p.timestamp = latestStat.report_date || latestStat.created_on || p.created_on;
-      p.hasLiveStats = true;
+      // Safe Time Parsing (ISO strings like +05:30, UTC 'Z', ya space-separated)
+      let reportMs = 0;
+      if (p.timestamp) {
+        if (typeof p.timestamp === "number") {
+          reportMs = p.timestamp > 1e11 ? p.timestamp : p.timestamp * 1000;
+        } else if (typeof p.timestamp === "string") {
+          const cleanStr = p.timestamp.includes(" ") && !p.timestamp.includes("T")
+            ? p.timestamp.replace(" ", "T")
+            : p.timestamp;
+          const parsed = Date.parse(cleanStr);
+          if (!isNaN(parsed)) reportMs = parsed;
+        }
+      }
+
+      // 15-Minute Stale Threshold Check
+      const STALE_THRESHOLD_MS = 15 * 60 * 1000;
+      const isDataStale = reportMs > 0 && (Date.now() - reportMs > STALE_THRESHOLD_MS);
+
+      if (isDataStale) {
+        p.offline = true;
+        p.hasLiveStats = false;
+        p.device_status = "offline";
+      } else {
+        p.hasLiveStats = true;
+      }
     } else {
       p.aqi = parseFloat(p.aqi) || parseFloat(p.indoor_aqi) || 0;
       p.indoor_aqi = p.aqi;
@@ -409,7 +433,7 @@
     if (force && currentAbortController) {
       try {
         currentAbortController.abort();
-      } catch (e) {}
+      } catch (e) { }
       isSyncInProgress = false;
     } else if (isSyncInProgress) {
       return;
